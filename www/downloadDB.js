@@ -30,7 +30,7 @@ var exec = require('cordova/exec'),
  * @param forceAsync  Whether to force an async return value (for testing native->js bridge).
  */
 module.exports = function (successCallback, errorCallback, message, forceAsync) {
-   
+    alert('action: ' + message )
     var action = 'downloadDB';
     var messageIsMultipart = (utils.typeName(message) == "Array");
     var args = messageIsMultipart ? message : [message];
