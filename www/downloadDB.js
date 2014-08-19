@@ -31,7 +31,7 @@ var exec = require('cordova/exec'),
  */
 module.exports = function (successCallback, errorCallback, message, forceAsync) {
    
-    var action = 'dowmloadDB';
+    var action = 'downloadDB';
     var messageIsMultipart = (utils.typeName(message) == "Array");
     var args = messageIsMultipart ? message : [message];
 
