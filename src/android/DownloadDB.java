@@ -56,7 +56,7 @@ public class DownloadDB extends CordovaPlugin {
      private String url;
      private String dbName;
      private ProgressDialog mProgressDialog;
-     private Activity activity = this.cordova.getActivity(); 
+     private Activity activity; 
      
      /**
      * Executes the request and returns PluginResult.
@@ -68,7 +68,9 @@ public class DownloadDB extends CordovaPlugin {
     @SuppressLint("NewApi") 
     public boolean execute(String action, final JSONArray args, final CallbackContext callbackContext) throws JSONException {
         if (action.equals("downloadDB")) {
-        	        	
+        	
+        	activity = this.cordova.getActivity();
+        	
  	        String[] params = args.getString(0).split(",");
  	        
  	        Log.d(TAG, "!!! download zip DB from url: " + params.toString());
