@@ -60,7 +60,7 @@ import android.util.Log;
 /**
 * This class exposes methods in Cordova that can be called from JavaScript.
 */
-public class UpdateDB extends CordovaPlugin {
+public class DownloadDB extends CordovaPlugin {
 	 public static final int DIALOG_DOWNLOAD_PROGRESS = 0;
 	 private String url;
 	 private String remoteVersion;
