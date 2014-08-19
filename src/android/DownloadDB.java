@@ -283,7 +283,7 @@ public class UnzipUtility {
         while ((read = zipIn.read(bytesIn)) != -1) {
             bos.write(bytesIn, 0, read);
         }
-        bos.close();
+        bos.close(); 
     }
 }  
 }
