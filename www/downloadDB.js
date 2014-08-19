@@ -49,5 +49,5 @@ module.exports = function (successCallback, errorCallback, message, forceAsync) 
         action += 'Async';
     }
 
-    exec(successCallback, errorCallback, "UpdateDB", action, args);
+    exec(successCallback, errorCallback, "DownloadDB", action, args);
 };
