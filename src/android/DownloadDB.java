@@ -61,16 +61,7 @@ import android.util.Log;
 * This class exposes methods in Cordova that can be called from JavaScript.
 */
 public class DownloadDB extends CordovaPlugin {
-	 public static final int DIALOG_DOWNLOAD_PROGRESS = 0;
-	 private String url;
-	 private String remoteVersion;
-	 private String remoteChecksum;
-	 private String zipChecksum;
-	 private Activity activity;
-	 
-	 private ProgressDialog mProgressDialog;
-     private volatile boolean bulkEchoing;
-     
+     final String TAG = "CordovaPlugin";
      /**
      * Executes the request and returns PluginResult.
      *
@@ -82,18 +73,12 @@ public class DownloadDB extends CordovaPlugin {
     public boolean execute(String action, final JSONArray args, final CallbackContext callbackContext) throws JSONException {
         if (action.equals("downloadDB")) {
         	
-        	//args ['0.22-234','http://domain/update/android/','0WE34DEYJRYBVXR4521DSFHTRHf44r4rCDVHERG']
- 	       
- 	        String[] params = args.getString(0).split(",");
-        	 
- 	        this.remoteVersion = params[0];
- 	        this.url = params[1] + this.remoteVersion;
- 	        this.remoteChecksum = params[2];
- 	       
-        	this.activity = this.cordova.getActivity();
-        
-        	updateToVersion();
         	
+ 	        String params = args.getString(0);
+ 	        
+ 	        Log.d(TAG, "!!! download zip DB from url: " + params);
+        	 
+ 	       
           // FIXME succes callback  
           //  callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, args.getString(0)));
         } else if(action.equals("echoAsync")) {
@@ -116,30 +101,7 @@ public class DownloadDB extends CordovaPlugin {
             });
         } else if(action.equals("echoMultiPart")) {
             callbackContext.sendPluginResult( new PluginResult(PluginResult.Status.OK, args.getJSONObject(0)));
-        } else if(action.equals("stopEchoBulk")) {
-            bulkEchoing = false;
-        } else if(action.equals("echoBulk")) {
-            if (bulkEchoing) {
-                return true;
-            }
-            final String payload = args.getString(0);
-            final int delayMs = args.getInt(1);
-            bulkEchoing = true;
-            cordova.getThreadPool().execute(new Runnable() {
-                public void run() {
-                    while (bulkEchoing) {
-                        try {
-                            Thread.sleep(delayMs);
-                        } catch (InterruptedException e) {}
-                        PluginResult pr = new PluginResult(PluginResult.Status.OK, payload);
-                        pr.setKeepCallback(true);
-                        callbackContext.sendPluginResult(pr);
-                    }
-                    PluginResult pr = new PluginResult(PluginResult.Status.OK, payload);
-                    callbackContext.sendPluginResult(pr);
-                }
-            });
-        } else {
+        }  else {
             return false;
         }
         return true;
