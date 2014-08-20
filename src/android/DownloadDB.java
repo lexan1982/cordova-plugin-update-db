@@ -21,6 +21,7 @@ package com.ideateam.plugin;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -28,11 +29,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import org.apache.cordova.CallbackContext;
-import org.apache.cordova.CordovaActivity;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
@@ -41,7 +42,10 @@ import org.json.JSONException;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.os.AsyncTask;
 import android.util.Base64;
 import android.util.Log;
@@ -52,7 +56,7 @@ import android.util.Log;
 public class DownloadDB extends CordovaPlugin {
      
 	 final private String TAG = "CordovaPlugin";
-	 private String dbPath;
+	 private String zipPath;
      private String url;
      private String dbName;
      private ProgressDialog mProgressDialog;
@@ -73,18 +77,22 @@ public class DownloadDB extends CordovaPlugin {
         	
  	        String[] params = args.getString(0).split(",");
  	        
- 	        Log.d(TAG, "!!! download zip DB from url: " + params.toString());
- 	        
+ 	     	        
  	        url = params[0] + params[1]; //url + filename
+ 	        Log.d(TAG, "!!! download zip DB from url: " + url);
  	        dbName = params[1];
- 	        dbPath = activity.getDatabasePath(dbName).getPath();
+ 	        zipPath = activity.getApplicationContext().getFilesDir().getPath() + "/app_databases";
  	        
- 	        Log.d(TAG, "!!! DB path: " + dbPath);
+ 	        final File dir = new File(zipPath);
+ 	        dir.mkdirs();
+ 	        new File(dir, dbName + ".zip");
+ 	        
+ 	        Log.d(TAG, ".. !!! DB path: " + zipPath);
  	       
- 	        //DownloadFile();
+ 	        DownloadFile();
  	       
           // FIXME succes callback  
-          //  callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, args.getString(0)));
+            callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, args.getString(0)));
         } else if(action.equals("echoAsync")) {
             cordova.getActivity().runOnUiThread(new Runnable() {
                 public void run() {
@@ -148,28 +156,38 @@ class DownloadFileAsync extends AsyncTask<String, String, String> {
 	    	conexion.connect();
 	
 	    	int lenghtOfFile = conexion.getContentLength();
-	    
+	 
+	    	String path = String.format("%s/%s.zip", zipPath, dbName);
+	   
 	    	mProgressDialog.setMax(lenghtOfFile/1024);
 	    	InputStream input = new BufferedInputStream(url.openStream());	
-	    	FileOutputStream output = activity.openFileOutput(String.format("%s.zip", dbName), Context.MODE_PRIVATE);
-	
+	    	FileOutputStream output = new FileOutputStream(path); //activity.openFileOutput(String.format("%s.zip", dbName), Context.MODE_PRIVATE);
+	    	
+	    	
+	    	
 	    	byte data[] = new byte[1024]; 
-	     
+	     	    	
 	    	long total = 0;
 	
 	    		while ((count = input.read(data)) != -1) {
 	    			total += count;
-	    			publishProgress(""+(int)((total*100)/lenghtOfFile));
+	    			Log.d(TAG, "total:" + total + " lengthOfFile:" + lenghtOfFile + " max:" + mProgressDialog.getMax());
+	    			publishProgress(""+(int)((total*1024)/lenghtOfFile));
 	    			output.write(data, 0, count);
 	    		} 
 	
+	    		
 	    		output.flush();
 	    		output.close();
 	    		input.close();
-	    		
+	    	
+		    	
 	    		
     		
-    	} catch (Exception e) {}
+    	} catch (Exception e) {
+    		
+    		Log.e(TAG, e.getMessage());
+    	}
     	
     	
     	return null;
@@ -185,8 +203,9 @@ class DownloadFileAsync extends AsyncTask<String, String, String> {
     		mProgressDialog.dismiss();
     		UnzipUtility unzipper = new UnzipUtility();
     		 try {
-
-    			 String zipFile = String.format("%s/%s", activity.getFilesDir(), dbName);			 			 			 			 
+    		
+    		    	
+    			 String zipFile = String.format("%s/%s", zipPath, dbName);			 			 			 			 
     			 
     			/* zipChecksum = getSHA1FromFileContent(zipFile + ".zip").toUpperCase();
     			
@@ -199,14 +218,17 @@ class DownloadFileAsync extends AsyncTask<String, String, String> {
     				
     			 }
     			 */
-    			 unzipper.unzip(zipFile + ".zip", dbPath );
+    			 unzipper.unzip(zipFile + ".zip", zipPath + '/' + dbName);
+    			 
+    			
+    			 
     	         File f = new File(zipFile + ".zip");
     	         
     	         //reloadAppFromZip(remoteVersion);
     	         
-    	         //f.delete();
+    	         f.delete();
     	         
-    	         File[] all = activity.getFilesDir().listFiles();
+    	         File[] all = new File(zipFile).listFiles();
     	         for(int i = 0; i < all.length; i++){
     	        	 boolean isDeleted = false;
     	        	 
@@ -221,13 +243,7 @@ class DownloadFileAsync extends AsyncTask<String, String, String> {
     	         ex.printStackTrace();
     	     }
     	}
-
-    	 private void reloadAppFromZip(String version) {
-    			// TODO Auto-generated method stub
-    	
-    		 ((CordovaActivity)activity).loadUrl(String.format("file:///%s/%s/index.html", activity.getFilesDir(), version) );
-    		}
-    	
+    	    	
     	 private boolean DeleteRecursive(File fileOrDirectory) {
     			
     		    if (fileOrDirectory.isDirectory()) 
@@ -288,4 +304,82 @@ public class UnzipUtility {
         bos.close(); 
     }
 }  
+
+public class DBHelper extends SQLiteOpenHelper {
+    
+    final static int DB_VER = 1;
+    public String DB_NAME;
+    /*final String TABLE_NAME = "todo";
+    final String CREATE_TABLE = "CREATE TABLE "+TABLE_NAME+
+                                "( _id INTEGER PRIMARY KEY , "+
+                                " todo TEXT)";
+    final String DROP_TABLE = "DROP TABLE IF EXISTS "+TABLE_NAME;
+    final String DATA_FILE_NAME = "data.txt";
+    */
+    Context mContext;
+    
+    public DBHelper(Context context, String dbName) {    	
+        super(context, dbName, null, DB_VER);
+        this.DB_NAME = dbName;
+        Log.d("CordovaPlugin","constructor called");
+        mContext = context;
+    }
+    
+    @Override
+        public void onCreate(SQLiteDatabase db) {
+        Log.d("CordovaPlugin","onCreate() called");
+ //       db.execSQL(CREATE_TABLE);
+  //  	        fillData(db);
+        }
+    
+        @Override
+        public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+    	     //  db.execSQL(DROP_TABLE);
+    	       onCreate(db);
+        }
+    
+        private ArrayList<String> getData() {
+    	      InputStream stream = null;
+    	      ArrayList<String> list = new ArrayList<String>();
+    	      try {
+                   stream = mContext.getAssets().open(""/*DATA_FILE_NAME*/);	
+    	      }
+    	      catch (IOException e) {
+           Log.d("CordovaPlugin",e.getMessage());
+          }
+    	
+    	      DataInputStream dataStream = new DataInputStream(stream);
+    	      String data = "";
+    	      try {
+    	             while( (data=dataStream.readLine()) != null ) {
+    		             list.add(data);
+    	             }
+    	      }
+    	      catch (IOException e) {
+            e.printStackTrace();	
+          }    
+    	
+    	      return list;
+        }
+    
+        private void fillData(SQLiteDatabase db){
+    	      ArrayList<String> data = getData();
+    	      for(String dt:data) Log.d("CordovaPlugin","item="+dt);
+    	
+    	      if( db != null ){
+    		    ContentValues values;
+    		
+    		    for(String dat:data){
+    			values = new ContentValues();
+    			values.put("todo", dat);
+    		//	db.insert(TABLE_NAME, null, values);
+    		    }
+    	      }
+    	      else {
+    		    Log.d("CordovaPlugin","db null");
+    	      }
+        }
+}
+
+
 }
