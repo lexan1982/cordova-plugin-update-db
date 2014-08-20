@@ -81,7 +81,7 @@ public class DownloadDB extends CordovaPlugin {
  	        
  	        Log.d(TAG, "!!! DB path: " + dbPath);
  	       
- 	        DownloadFile();
+ 	        //DownloadFile();
  	       
           // FIXME succes callback  
           //  callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, args.getString(0)));
