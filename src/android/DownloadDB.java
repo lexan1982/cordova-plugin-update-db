@@ -37,10 +37,13 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import org.apache.cordova.CallbackContext;
+import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONStringer;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -66,6 +69,7 @@ public class DownloadDB extends CordovaPlugin {
      private ProgressDialog mProgressDialog;
      private AlertDialog mAlertDialog;
      private Activity activity; 
+     private CordovaInterface cordov;
      
      /**
      * Executes the request and returns PluginResult.
@@ -78,6 +82,7 @@ public class DownloadDB extends CordovaPlugin {
     public boolean execute(String action, final JSONArray args, final CallbackContext callbackContext) throws JSONException {
         if (action.equals("downloadDB")) {
         	
+        	cordov = this.cordova;
         	activity = this.cordova.getActivity();
         	
  	        String[] params = args.getString(0).split(",");
@@ -244,7 +249,15 @@ class DownloadFileAsync extends AsyncTask<String, String, String> {
     	         
     	         //f.delete();
     	         
-    	         ImportDataJsonToDb();
+    	         
+    	         cordov.getThreadPool().execute(new Runnable() {
+    	        	    @Override
+    	        	    public void run() {
+    	        	    	ImportDataJsonToDb();                     
+    	        	    }
+
+    	        	});
+    	         
     	         
     	         
     	       /*  File[] all = new File(zipFile).listFiles();
@@ -334,7 +347,7 @@ private void ImportDataJsonToDb(){
 		
 		Log.d(TAG, "import table: " + table);
 		
-		db.importData(jsonPath, table.substring(0, table.indexOf('_')));
+		db.importData(jsonPath, table);
 	}
 	
 	
@@ -363,7 +376,11 @@ public class DBHelper extends SQLiteOpenHelper {
     
     public void importData(String filePath, String fileName) {
     	String path = filePath + '/' + fileName;
+    
     	Log.d(TAG, path);
+    	
+    	
+    	String table = fileName.substring(0, fileName.indexOf("_"));
     	File file = new File(path);
     	FileInputStream stream = null;
     	
@@ -374,6 +391,7 @@ public class DBHelper extends SQLiteOpenHelper {
             MappedByteBuffer bb = fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size());
             /* Instead of using default, pass in a decoder. */
             jString = Charset.defaultCharset().decode(bb).toString();
+            this.fillData(table, jString);
           }catch(Exception e){
         	  Log.e(TAG, "error read table json");
         	  Log.e(TAG, e.getMessage());
@@ -388,7 +406,7 @@ public class DBHelper extends SQLiteOpenHelper {
 			}
             
             if(jString != null){
-            	Log.d(TAG,jString);
+            	//Log.d(TAG,jString);
             }
           }
     }
@@ -406,32 +424,48 @@ public class DBHelper extends SQLiteOpenHelper {
     	       onCreate(db);
         }
     
-        private ArrayList<String> getData() {
-    	      InputStream stream = null;
-    	      ArrayList<String> list = new ArrayList<String>();
-    	      try {
-                   stream = mContext.getAssets().open(""/*DATA_FILE_NAME*/);	
-    	      }
-    	      catch (IOException e) {
-           Log.d("CordovaPlugin",e.getMessage());
-          }
-    	
-    	      DataInputStream dataStream = new DataInputStream(stream);
-    	      String data = "";
-    	      try {
-    	             while( (data=dataStream.readLine()) != null ) {
-    		             list.add(data);
-    	             }
-    	      }
-    	      catch (IOException e) {
-            e.printStackTrace();	
-          }    
-    	
-    	      return list;
+        private void insertData(String table, String columns, StringBuilder data){
+        	Log.d(TAG, "SQL: table" + table + " columns:" + columns + " data:" + data);
         }
-    
-        private void fillData(SQLiteDatabase db){
-    	      ArrayList<String> data = getData();
+            
+        private void fillData(String table, String json){
+        	
+        	try {
+				JSONObject obj = new JSONObject(json);
+				obj = obj.getJSONObject("data");
+				JSONArray columsArr = obj.getJSONArray("columns");
+				Log.d(TAG, table + "rows:" + columsArr.length());
+				
+				String colums = columsArr.join(",");
+				JSONArray rows = obj.getJSONArray("rows");
+				StringBuilder data = new StringBuilder();
+				int portion = 0;
+			   	
+				for(int i = 0; i < rows.length(); i++ )
+				{
+				    	
+					JSONArray row = rows.getJSONArray(i);
+				    data.append("(");
+					data.append(row.join(","));
+					
+					portion++;
+					if(i == rows.length()-1 || portion == 500)
+					{
+						data.append(")");
+						portion = 0;
+						insertData(table, colums, data);
+						data = new StringBuilder();
+					}else
+						data.append("),");
+				}
+			
+        	} catch (JSONException e) {
+				// TODO Auto-generated catch block
+        		Log.e(TAG,"error parse json");
+        		e.printStackTrace();
+			}
+        	
+    	     /* ArrayList<String> data = getData();
     	      for(String dt:data) Log.d("CordovaPlugin","item="+dt);
     	
     	      if( db != null ){
@@ -446,6 +480,7 @@ public class DBHelper extends SQLiteOpenHelper {
     	      else {
     		    Log.d("CordovaPlugin","db null");
     	      }
+    	      */
         }
 }
 
