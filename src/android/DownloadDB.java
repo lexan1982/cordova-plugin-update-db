@@ -29,6 +29,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -41,6 +44,7 @@ import org.json.JSONException;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
@@ -60,6 +64,7 @@ public class DownloadDB extends CordovaPlugin {
      private String url;
      private String dbName;
      private ProgressDialog mProgressDialog;
+     private AlertDialog mAlertDialog;
      private Activity activity; 
      
      /**
@@ -83,16 +88,13 @@ public class DownloadDB extends CordovaPlugin {
  	        dbName = params[1];
  	        zipPath = activity.getApplicationContext().getFilesDir().getPath() + "/app_databases";
  	        
- 	        final File dir = new File(zipPath);
- 	        dir.mkdirs();
- 	        new File(dir, dbName + ".zip");
- 	        
+ 	         	        
  	        Log.d(TAG, ".. !!! DB path: " + zipPath);
  	       
  	        DownloadFile();
  	       
           // FIXME succes callback  
-            callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, args.getString(0)));
+          callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, args.getString(0)));
         } else if(action.equals("echoAsync")) {
             cordova.getActivity().runOnUiThread(new Runnable() {
                 public void run() {
@@ -132,7 +134,7 @@ public class DownloadDB extends CordovaPlugin {
     }
     
 class DownloadFileAsync extends AsyncTask<String, String, String> {
-    	
+    	boolean isDownloaded = false;
     	@Override
     	protected void onPreExecute() {
     		super.onPreExecute();
@@ -141,7 +143,8 @@ class DownloadFileAsync extends AsyncTask<String, String, String> {
 			mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 			mProgressDialog.setCancelable(false);
 			mProgressDialog.show();
-    		
+			
+			Log.d(TAG, "mProgressDialog.show");
     		
     	}
 
@@ -161,8 +164,15 @@ class DownloadFileAsync extends AsyncTask<String, String, String> {
 	   
 	    	mProgressDialog.setMax(lenghtOfFile/1024);
 	    	InputStream input = new BufferedInputStream(url.openStream());	
+	    	
+	    	Log.d(TAG, "zip path:" + path);
+	    	File zip = new File(zipPath);
+	    	zip.mkdirs();
+	    	zip = new File(path);
+	    	zip.createNewFile();
 	    	FileOutputStream output = new FileOutputStream(path); //activity.openFileOutput(String.format("%s.zip", dbName), Context.MODE_PRIVATE);
 	    	
+	    	Log.d(TAG, "zip path 2");
 	    	
 	    	
 	    	byte data[] = new byte[1024]; 
@@ -174,18 +184,20 @@ class DownloadFileAsync extends AsyncTask<String, String, String> {
 	    			Log.d(TAG, "total:" + total + " lengthOfFile:" + lenghtOfFile + " max:" + mProgressDialog.getMax());
 	    			publishProgress(""+(int)((total*1024)/lenghtOfFile));
 	    			output.write(data, 0, count);
+	    			
+	    	    	
 	    		} 
 	
 	    		
 	    		output.flush();
 	    		output.close();
 	    		input.close();
-	    	
+	    		isDownloaded = true;
 		    	
 	    		
     		
     	} catch (Exception e) {
-    		
+    		    		
     		Log.e(TAG, e.getMessage());
     	}
     	
@@ -201,11 +213,15 @@ class DownloadFileAsync extends AsyncTask<String, String, String> {
     	@Override
     	protected void onPostExecute(String unused) {
     		mProgressDialog.dismiss();
-    		UnzipUtility unzipper = new UnzipUtility();
-    		 try {
     		
-    		    	
-    			 String zipFile = String.format("%s/%s", zipPath, dbName);			 			 			 			 
+    		UnzipUtility unzipper = new UnzipUtility();
+    		
+    		if(isDownloaded)
+    		
+    		try {
+    		
+    			 Log.d(TAG, "unzip");
+    			 String zipFile = String.format("%s/%s.zip", zipPath, dbName);			 			 			 			 
     			 
     			/* zipChecksum = getSHA1FromFileContent(zipFile + ".zip").toUpperCase();
     			
@@ -218,26 +234,27 @@ class DownloadFileAsync extends AsyncTask<String, String, String> {
     				
     			 }
     			 */
-    			 unzipper.unzip(zipFile + ".zip", zipPath + '/' + dbName);
+    			 unzipper.unzip(zipFile, zipPath + '/' + dbName);
     			 
-    			
+    			 Log.d(TAG, "unzip 2");
     			 
     	         File f = new File(zipFile + ".zip");
     	         
     	         //reloadAppFromZip(remoteVersion);
     	         
-    	         f.delete();
+    	         //f.delete();
     	         
-    	         File[] all = new File(zipFile).listFiles();
+    	         ImportDataJsonToDb();
+    	         
+    	         
+    	       /*  File[] all = new File(zipFile).listFiles();
     	         for(int i = 0; i < all.length; i++){
     	        	 boolean isDeleted = false;
     	        	 
     	        	 if(!all[i].getName().equals(dbName))
     	        		 isDeleted = DeleteRecursive(all[i]);
-    	        	
-    	        	 
     	         }
-    	         
+    	         */
     	     } catch (Exception ex) {
     	         // some errors occurred
     	         ex.printStackTrace();
@@ -305,6 +322,25 @@ public class UnzipUtility {
     }
 }  
 
+private void ImportDataJsonToDb(){
+	
+	String jsonPath = String.format("%s/%s/json", zipPath, dbName);
+	File[] tables = new File(jsonPath).listFiles();
+	DBHelper db = new DBHelper(activity.getApplicationContext(), dbName);
+	
+	for(int i = 0; i < tables.length; i++){
+		
+		String table = tables[i].getName();
+		
+		Log.d(TAG, "import table: " + table);
+		
+		db.importData(jsonPath, table.substring(0, table.indexOf('_')));
+	}
+	
+	
+	
+}
+
 public class DBHelper extends SQLiteOpenHelper {
     
     final static int DB_VER = 1;
@@ -323,6 +359,38 @@ public class DBHelper extends SQLiteOpenHelper {
         this.DB_NAME = dbName;
         Log.d("CordovaPlugin","constructor called");
         mContext = context;
+    }
+    
+    public void importData(String filePath, String fileName) {
+    	String path = filePath + '/' + fileName;
+    	Log.d(TAG, path);
+    	File file = new File(path);
+    	FileInputStream stream = null;
+    	
+        String jString = null;
+        try {
+        	stream = new FileInputStream(file);
+            FileChannel fc = stream.getChannel();
+            MappedByteBuffer bb = fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size());
+            /* Instead of using default, pass in a decoder. */
+            jString = Charset.defaultCharset().decode(bb).toString();
+          }catch(Exception e){
+        	  Log.e(TAG, "error read table json");
+        	  Log.e(TAG, e.getMessage());
+        	  
+          }
+          finally {
+            try {
+				stream.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+            
+            if(jString != null){
+            	Log.d(TAG,jString);
+            }
+          }
     }
     
     @Override
@@ -381,5 +449,6 @@ public class DBHelper extends SQLiteOpenHelper {
         }
 }
 
+	
 
 }
