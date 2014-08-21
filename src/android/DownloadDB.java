@@ -348,6 +348,8 @@ private void ImportDataJsonToDb(){
 		Log.d(TAG, "import table: " + table);
 		
 		db.importData(jsonPath, table);
+		
+		//db.close();
 	}
 	
 	
@@ -358,6 +360,8 @@ public class DBHelper extends SQLiteOpenHelper {
     
     final static int DB_VER = 1;
     public String DB_NAME;
+    SQLiteDatabase db;
+    
     /*final String TABLE_NAME = "todo";
     final String CREATE_TABLE = "CREATE TABLE "+TABLE_NAME+
                                 "( _id INTEGER PRIMARY KEY , "+
@@ -372,6 +376,11 @@ public class DBHelper extends SQLiteOpenHelper {
         this.DB_NAME = dbName;
         Log.d("CordovaPlugin","constructor called");
         mContext = context;
+    
+        
+        db = super.getWritableDatabase();
+        
+        Log.d(TAG,"...DB ready");
     }
     
     public void importData(String filePath, String fileName) {
@@ -424,36 +433,55 @@ public class DBHelper extends SQLiteOpenHelper {
     	       onCreate(db);
         }
     
+        private void createTable(String name, String columns){
+        	try{
+            	db.execSQL("CREATE TABLE " + name + " ("+ columns +")");
+            	}catch(Exception e){
+            		Log.e(TAG, "error create table: " + name);
+            		Log.e(TAG, e.getMessage());
+            	}
+        }
+        
         private void insertData(String table, String columns, StringBuilder data){
-        	Log.d(TAG, "SQL: table" + table + " columns:" + columns + " data:" + data);
+        	Log.d(TAG, "SQL: table" + table + " columns:" + columns );
+        	
+        	try{
+        	db.execSQL("INSERT INTO " + table + " ("+ columns +") VALUES " + data);
+        	}catch(Exception e){
+        		Log.e(TAG, "error write to DB");
+        		Log.e(TAG, e.getMessage());
+        	}
         }
             
         private void fillData(String table, String json){
-        	
+        	int step=0;
         	try {
 				JSONObject obj = new JSONObject(json);
 				obj = obj.getJSONObject("data");
-				JSONArray columsArr = obj.getJSONArray("columns");
-				Log.d(TAG, table + "rows:" + columsArr.length());
+				JSONArray columnsArr = obj.getJSONArray("columns");
+				Log.d(TAG, table + "rows:" + columnsArr.length());
 				
-				String colums = columsArr.join(",");
+				String columns = columnsArr.join(",");
 				JSONArray rows = obj.getJSONArray("rows");
 				StringBuilder data = new StringBuilder();
 				int portion = 0;
 			   	
+				this.createTable(table, columns);
+				
 				for(int i = 0; i < rows.length(); i++ )
 				{
-				    	
+				    	step=i;
 					JSONArray row = rows.getJSONArray(i);
 				    data.append("(");
+				    //safeData(row);
 					data.append(row.join(","));
 					
 					portion++;
-					if(i == rows.length()-1 || portion == 500)
+					if(i == rows.length()-1 || portion == 450)
 					{
 						data.append(")");
 						portion = 0;
-						insertData(table, colums, data);
+						insertData(table, columns, data);
 						data = new StringBuilder();
 					}else
 						data.append("),");
@@ -461,7 +489,7 @@ public class DBHelper extends SQLiteOpenHelper {
 			
         	} catch (JSONException e) {
 				// TODO Auto-generated catch block
-        		Log.e(TAG,"error parse json");
+        		Log.e(TAG, step + " table:"+table+": error parse json");
         		e.printStackTrace();
 			}
         	
@@ -481,6 +509,30 @@ public class DBHelper extends SQLiteOpenHelper {
     		    Log.d("CordovaPlugin","db null");
     	      }
     	      */
+        }
+        
+        private void safeData(JSONArray row){
+        	
+        	for(int i = 0; i < row.length(); i++)
+        	{
+        		try {
+        			
+        			if(row.getString(i).contains("'") || row.getString(i).contains("\"")){
+        				Log.d(TAG, "       find " + row.getString(i));
+        				row.put(i, "...");
+        				Log.d(TAG, "       find " + row.getString(i));
+        			}
+        			
+        			
+        			
+					//String s = row.getString(i).replace('"',' ');
+					//s = s.replaceAll("'","");
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+        		
+        	}
         }
 }
 
