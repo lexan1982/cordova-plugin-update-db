@@ -21,7 +21,6 @@ package com.ideateam.plugin;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -32,7 +31,6 @@ import java.net.URLConnection;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -43,13 +41,11 @@ import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.JSONStringer;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -70,7 +66,7 @@ public class DownloadDB extends CordovaPlugin {
      private AlertDialog mAlertDialog;
      private Activity activity; 
      private CordovaInterface cordov;
-     
+     private long startTime;
      /**
      * Executes the request and returns PluginResult.
      *
@@ -81,7 +77,7 @@ public class DownloadDB extends CordovaPlugin {
     @SuppressLint("NewApi") 
     public boolean execute(String action, final JSONArray args, final CallbackContext callbackContext) throws JSONException {
         if (action.equals("downloadDB")) {
-        	
+        	startTime = System.currentTimeMillis();
         	cordov = this.cordova;
         	activity = this.cordova.getActivity();
         	
@@ -351,9 +347,15 @@ private void ImportDataJsonToDb(){
 		
 		//db.close();
 	}
+	Log.d(TAG, "import ALL tables: ");
 	
+	long millis = System.currentTimeMillis() - startTime;
 	
-	
+	int seconds = (int) (millis / 1000);
+    int minutes = seconds / 60;
+    seconds     = seconds % 60;
+
+    Log.d(TAG, String.format("%d:%02d", minutes, seconds));
 }
 
 public class DBHelper extends SQLiteOpenHelper {
@@ -443,7 +445,7 @@ public class DBHelper extends SQLiteOpenHelper {
         }
         
         private void insertData(String table, String columns, StringBuilder data){
-        	Log.d(TAG, "SQL: table" + table + " columns:" + columns );
+        	//Log.d(TAG, "SQL: table" + table + " columns:" + columns );
         	
         	try{
         	db.execSQL("INSERT INTO " + table + " ("+ columns +") VALUES " + data);
@@ -477,7 +479,7 @@ public class DBHelper extends SQLiteOpenHelper {
 					data.append(row.join(","));
 					
 					portion++;
-					if(i == rows.length()-1 || portion == 450)
+					if(i == rows.length()-1 || portion == 500)
 					{
 						data.append(")");
 						portion = 0;
