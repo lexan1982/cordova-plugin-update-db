@@ -42,6 +42,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.R;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -61,6 +62,8 @@ public class DownloadDB extends CordovaPlugin {
 
 	final private String TAG = "CordovaPlugin";
 	private String zipPath;
+	private String cordovaDBPath;
+	private String cordovaDBName;
 	private String url;
 	private String dbName;
 	private ProgressDialog mProgressDialog;
@@ -96,7 +99,8 @@ public class DownloadDB extends CordovaPlugin {
 			zipPath = zipPath.substring(0, zipPath.lastIndexOf("/")) + "/databases";
 
 			Log.d(TAG, ".. !!! DB path: " + zipPath);
-
+			
+			ReplaceDB();
 			DownloadFile();
 
 			// FIXME succes callback
@@ -243,25 +247,47 @@ public class DownloadDB extends CordovaPlugin {
 					 * 
 					 * }
 					 */
-					unzipper.unzip(zipFile, zipPath + '/' + dbName);
+					unzipper.unzip(zipFile, cordovaDBPath);
 
 					Log.d(TAG, "unzip 2");
-
-					File f = new File(zipFile + ".zip");
+					
+					
+					
+					SQLiteDatabase master_db = SQLiteDatabase.openDatabase(cordovaDBPath + cordovaDBName, null,  SQLiteDatabase.OPEN_READONLY);
+					
+					Cursor c = master_db.rawQuery("Select count(*) from athletes", null);
+					c.moveToFirst();
+					
+					Log.d(TAG, "athletes from zip: " +  c.getString(0));
+		
+					
+										
+					//File f = new File(cordovaDBPath, cordovaDBName);
+					
+					//Log.d(TAG, "cordovaDB: " + f.getPath());
+					//f.delete();
+					//Log.d(TAG, "cordovaDB deleted");
+					
+					//File newDB = new File(cordovaDBPath, dbName);
+					
+					
+					//Log.d(TAG, "downloaded DB renamed");
+					
+					//File f = new File(zipFile + ".zip");
 
 					// reloadAppFromZip(remoteVersion);
 
 					// f.delete();
 
-					cordov.getThreadPool().execute(new Runnable() {
+					/*cordov.getThreadPool().execute(new Runnable() {
 						@Override
 						public void run() {
 							// ImportDataJsonToDb(); // Native multi insert from json to DB
-							ReplaceDB();
+							//ReplaceDB();
 						}
 
 					});
-
+*/
 					/*
 					 * File[] all = new File(zipFile).listFiles(); for(int i =
 					 * 0; i < all.length; i++){ boolean isDeleted = false;
@@ -309,9 +335,10 @@ public class DownloadDB extends CordovaPlugin {
 					zipFilePath));
 			ZipEntry entry = zipIn.getNextEntry();
 			// iterates over entries in the zip file
+			Log.d(TAG, "..unzip" + entry.getName());
 			while (entry != null) {
 				String filePath = destDirectory + File.separator
-						+ entry.getName();
+						+ cordovaDBName;
 				if (!entry.isDirectory()) {
 					// if the entry is a file, extracts it
 					extractFile(zipIn, filePath);
@@ -535,13 +562,25 @@ public class DownloadDB extends CordovaPlugin {
 	private void ReplaceDB() {
 		
 		Log.d(TAG, "..ReplaceDB");
-		String pName = this.getClass().getPackage().getName();
-		SQLiteDatabase master_db;
 		
-		DBHelper db = new DBHelper(activity.getApplicationContext(), "Databases.db");
-		Log.d(TAG, "..db open");
+		String dbPath = zipPath.substring(0, zipPath.lastIndexOf("/")) + "/app_database/";
+		SQLiteDatabase master_db = SQLiteDatabase.openDatabase(dbPath + "Databases.db", null,  SQLiteDatabase.OPEN_READONLY);
 		
-		db.selectData("Select origin, '/', path from Databases where name='" + dbName+"'");
+		Cursor c = master_db.rawQuery("Select origin, path from Databases", null);
+		c.moveToFirst();
+		
+		cordovaDBPath = dbPath + c.getString(0) + "/";
+		cordovaDBName = c.getString(1);
+				
+        //Log.d(TAG, "..SQL " +  c.getString(0));
+        
+        
+		
+		//DBHelper db = new DBHelper(activity.getApplicationContext(), dbName + ".db");
+		//Log.d(TAG, "..db open");
+		
+		//db.selectData("Select count(*) from athletes");
+		
 		Log.d(TAG, "..db open 1");
 		/*try{
 			master_db = SQLiteDatabase.openDatabase("/data/data/"+pName+"/databases/Databases.db", null, SQLiteDatabase.OPEN_READONLY);
@@ -561,3 +600,27 @@ public class DownloadDB extends CordovaPlugin {
 	}
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
