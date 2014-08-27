@@ -65,7 +65,7 @@ public class DownloadDB extends CordovaPlugin {
 	private String dbName;
 	private ProgressDialog mProgressDialog;
 	private AlertDialog mAlertDialog;
-	private Activity activity;
+	private Activity activity; 
 	private CordovaInterface cordov;
 	private long startTime;
 
@@ -92,8 +92,8 @@ public class DownloadDB extends CordovaPlugin {
 			url = params[0] + params[1]; // url + filename
 			Log.d(TAG, "!!! download zip DB from url: " + url);
 			dbName = params[1];
-			zipPath = activity.getApplicationContext().getFilesDir().getPath()
-					+ "/app_databases";
+			zipPath = activity.getApplicationContext().getFilesDir().getPath();
+			zipPath = zipPath.substring(0, zipPath.lastIndexOf("/")) + "/databases";
 
 			Log.d(TAG, ".. !!! DB path: " + zipPath);
 
@@ -193,9 +193,7 @@ public class DownloadDB extends CordovaPlugin {
 				long total = 0;
 
 				while ((count = input.read(data)) != -1) {
-					total += count;
-					Log.d(TAG, "total:" + total + " lengthOfFile:"
-							+ lenghtOfFile + " max:" + mProgressDialog.getMax());
+					total += count;					
 					publishProgress("" + (int) ((total * 1024) / lenghtOfFile));
 					output.write(data, 0, count);
 
@@ -521,21 +519,45 @@ public class DownloadDB extends CordovaPlugin {
 			 */
 		}
 
+		public String[] selectData(String sql){
+			String[] result = null;
+		
+			
+			
+			Cursor c = db.rawQuery(sql, null);
+            Log.d(TAG, "..SQL" +  c.toString());		
+
+			
+			return result;
+		} 
 	}
 
 	private void ReplaceDB() {
 		
 		Log.d(TAG, "..ReplaceDB");
 		String pName = this.getClass().getPackage().getName();
-		SQLiteDatabase master_db = SQLiteDatabase.openDatabase("/data/data/"+pName+"/databases/Databases.db", null, SQLiteDatabase.OPEN_READONLY);
-		Log.d(TAG, "..ReplaceDB 1");
-		if(master_db == null && !master_db.isOpen())
-			master_db = SQLiteDatabase.openDatabase("/data/data/"+pName+"/app_database/Databases.db", null, SQLiteDatabase.OPEN_READONLY);
+		SQLiteDatabase master_db;
 		
-		 Cursor c = master_db.rawQuery("Select origin, '/', path from Databases where name=" + dbName, null);
+		DBHelper db = new DBHelper(activity.getApplicationContext(), "Databases.db");
+		Log.d(TAG, "..db open");
+		
+		db.selectData("Select origin, '/', path from Databases where name='" + dbName+"'");
+		Log.d(TAG, "..db open 1");
+		/*try{
+			master_db = SQLiteDatabase.openDatabase("/data/data/"+pName+"/databases/Databases.db", null, SQLiteDatabase.OPEN_READONLY);
+		}catch(Exception e){
+			Log.d(TAG, "..error " + e.getMessage()); 
+			
+			master_db = SQLiteDatabase.openDatabase("/data/data/"+pName+"/app_database/Databases.db", null, SQLiteDatabase.OPEN_READONLY);
+		} 
+		
+		Log.d(TAG, "..ReplaceDB 1");
+		
+		Cursor c = master_db.rawQuery("Select origin, '/', path from Databases where name=" + dbName, null);
          Log.d(TAG, "..SQL" +  c.toString());		
 
 		 master_db.close();
+		 */
 	}
 
 }
