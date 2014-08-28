@@ -102,10 +102,11 @@ public class DownloadDB extends CordovaPlugin {
 			
 			ReplaceDB();
 			DownloadFile();
-
-			// FIXME succes callback
+			
+			// FIXME success callback
 			callbackContext.sendPluginResult(new PluginResult(
 					PluginResult.Status.OK, args.getString(0)));
+			
 		} else if (action.equals("echoAsync")) {
 			cordova.getActivity().runOnUiThread(new Runnable() {
 				public void run() {
@@ -556,7 +557,7 @@ public class DownloadDB extends CordovaPlugin {
 
 			
 			return result;
-		} 
+		}  
 	}
 
 	private void ReplaceDB() {
@@ -566,7 +567,7 @@ public class DownloadDB extends CordovaPlugin {
 		String dbPath = zipPath.substring(0, zipPath.lastIndexOf("/")) + "/app_database/";
 		SQLiteDatabase master_db = SQLiteDatabase.openDatabase(dbPath + "Databases.db", null,  SQLiteDatabase.OPEN_READONLY);
 		
-		Cursor c = master_db.rawQuery("Select origin, path from Databases", null);
+		Cursor c = master_db.rawQuery("SELECT origin, path FROM Databases WHERE name='"+dbName+"'", null);
 		c.moveToFirst();
 		
 		cordovaDBPath = dbPath + c.getString(0) + "/";
