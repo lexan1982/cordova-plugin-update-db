@@ -42,7 +42,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.R;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -52,7 +51,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.AsyncTask;
-import android.util.Base64;
 import android.util.Log;
 
 /**
@@ -66,11 +64,9 @@ public class DownloadDB extends CordovaPlugin {
 	private String cordovaDBName;
 	private String url;
 	private String dbName;
-	private ProgressDialog mProgressDialog;
-	private AlertDialog mAlertDialog;
+	private ProgressDialog mProgressDialog;	
 	private Activity activity; 
-	private CordovaInterface cordov;
-	private long startTime;
+	private CallbackContext callbackContext;
 
 	/**
 	 * Executes the request and returns PluginResult.
@@ -86,8 +82,7 @@ public class DownloadDB extends CordovaPlugin {
 	public boolean execute(String action, final JSONArray args,
 			final CallbackContext callbackContext) throws JSONException {
 		if (action.equals("downloadDB")) {
-			startTime = System.currentTimeMillis();
-			cordov = this.cordova;
+		
 			activity = this.cordova.getActivity();
 
 			String[] params = args.getString(0).split(",");
@@ -97,15 +92,14 @@ public class DownloadDB extends CordovaPlugin {
 			dbName = params[1];
 			zipPath = activity.getApplicationContext().getFilesDir().getPath();
 			zipPath = zipPath.substring(0, zipPath.lastIndexOf("/")) + "/databases";
-
+ 
 			Log.d(TAG, ".. !!! DB path: " + zipPath);
 			
 			ReplaceDB();
 			DownloadFile();
+			 
+			this.callbackContext = callbackContext;
 			
-			// FIXME success callback
-			callbackContext.sendPluginResult(new PluginResult(
-					PluginResult.Status.OK, args.getString(0)));
 			
 		} else if (action.equals("echoAsync")) {
 			cordova.getActivity().runOnUiThread(new Runnable() {
@@ -114,29 +108,23 @@ public class DownloadDB extends CordovaPlugin {
 							PluginResult.Status.OK, args.optString(0)));
 				}
 			});
-		} else if (action.equals("echoArrayBuffer")) {
-			String data = args.optString(0);
-			byte[] rawData = Base64.decode(data, Base64.DEFAULT);
-			callbackContext.sendPluginResult(new PluginResult(
-					PluginResult.Status.OK, rawData));
-		} else if (action.equals("echoArrayBufferAsync")) {
-			cordova.getThreadPool().execute(new Runnable() {
-				public void run() {
-					String data = args.optString(0);
-					byte[] rawData = Base64.decode(data, Base64.DEFAULT);
-					callbackContext.sendPluginResult(new PluginResult(
-							PluginResult.Status.OK, rawData));
-				}
-			});
-		} else if (action.equals("echoMultiPart")) {
-			callbackContext.sendPluginResult(new PluginResult(
-					PluginResult.Status.OK, args.getJSONObject(0)));
 		} else {
 			return false;
 		}
+		
 		return true;
 	}
 
+	private void CallbackResult(Boolean success,String msg){
+		
+		if(success)
+			this.callbackContext.sendPluginResult(new PluginResult(
+						PluginResult.Status.OK, msg));
+		else
+			this.callbackContext.sendPluginResult(new PluginResult(
+					PluginResult.Status.ERROR, msg));
+	}
+	
 	private void DownloadFile() {
 		activity.runOnUiThread(new Runnable() {
 
@@ -210,7 +198,7 @@ public class DownloadDB extends CordovaPlugin {
 				isDownloaded = true;
 
 			} catch (Exception e) {
-
+				CallbackResult(false, e.getMessage());
 				Log.e(TAG, e.getMessage());
 			}
 
@@ -236,80 +224,22 @@ public class DownloadDB extends CordovaPlugin {
 					Log.d(TAG, "unzip");
 					String zipFile = String
 							.format("%s/%s.zip", zipPath, dbName);
-
-					/*
-					 * zipChecksum = getSHA1FromFileContent(zipFile +
-					 * ".zip").toUpperCase();
-					 * 
-					 * if(zipChecksum != null &&
-					 * !zipChecksum.equals(remoteChecksum)){
-					 * showAlertDialogCheckSum(); File f = new File(zipFile +
-					 * ".zip"); f.delete(); zipChecksum = null; return;
-					 * 
-					 * }
-					 */
+					
 					unzipper.unzip(zipFile, cordovaDBPath);
 
 					Log.d(TAG, "unzip 2");
 					
+					CallbackResult(true, "db imported");
 					
 					
-					SQLiteDatabase master_db = SQLiteDatabase.openDatabase(cordovaDBPath + cordovaDBName, null,  SQLiteDatabase.OPEN_READONLY);
-					
-					Cursor c = master_db.rawQuery("Select count(*) from athletes", null);
-					c.moveToFirst();
-					
-					Log.d(TAG, "athletes from zip: " +  c.getString(0));
-		
-					
-										
-					//File f = new File(cordovaDBPath, cordovaDBName);
-					
-					//Log.d(TAG, "cordovaDB: " + f.getPath());
-					//f.delete();
-					//Log.d(TAG, "cordovaDB deleted");
-					
-					//File newDB = new File(cordovaDBPath, dbName);
-					
-					
-					//Log.d(TAG, "downloaded DB renamed");
-					
-					//File f = new File(zipFile + ".zip");
-
-					// reloadAppFromZip(remoteVersion);
-
-					// f.delete();
-
-					/*cordov.getThreadPool().execute(new Runnable() {
-						@Override
-						public void run() {
-							// ImportDataJsonToDb(); // Native multi insert from json to DB
-							//ReplaceDB();
-						}
-
-					});
-*/
-					/*
-					 * File[] all = new File(zipFile).listFiles(); for(int i =
-					 * 0; i < all.length; i++){ boolean isDeleted = false;
-					 * 
-					 * if(!all[i].getName().equals(dbName)) isDeleted =
-					 * DeleteRecursive(all[i]); }
-					 */
 				} catch (Exception ex) {
 					// some errors occurred
 					ex.printStackTrace();
+					CallbackResult(false, ex.getMessage());
 				}
 		}
 
-		private boolean DeleteRecursive(File fileOrDirectory) {
-
-			if (fileOrDirectory.isDirectory())
-				for (File child : fileOrDirectory.listFiles())
-					DeleteRecursive(child);
-
-			return fileOrDirectory.delete();
-		}
+		
 	}
 
 	public class UnzipUtility {
@@ -374,192 +304,7 @@ public class DownloadDB extends CordovaPlugin {
 		}
 	}
 
-	private void ImportDataJsonToDb() {
-
-		String jsonPath = String.format("%s/%s/json", zipPath, dbName);
-		File[] tables = new File(jsonPath).listFiles();
-		DBHelper db = new DBHelper(activity.getApplicationContext(), dbName);
-
-		for (int i = 0; i < tables.length; i++) {
-
-			String table = tables[i].getName();
-
-			Log.d(TAG, "import table: " + table);
-
-			db.importData(jsonPath, table);
-
-			// db.close();
-		}
-		Log.d(TAG, "import ALL tables: ");
-
-		long millis = System.currentTimeMillis() - startTime;
-
-		int seconds = (int) (millis / 1000);
-		int minutes = seconds / 60;
-		seconds = seconds % 60;
-
-		Log.d(TAG, String.format("%d:%02d", minutes, seconds));
-	}
-
-	public class DBHelper extends SQLiteOpenHelper {
-
-		final static int DB_VER = 1;
-		public String DB_NAME;
-		SQLiteDatabase db;
-
-		/*
-		 * final String TABLE_NAME = "todo"; final String CREATE_TABLE =
-		 * "CREATE TABLE "+TABLE_NAME+ "( _id INTEGER PRIMARY KEY , "+
-		 * " todo TEXT)"; final String DROP_TABLE =
-		 * "DROP TABLE IF EXISTS "+TABLE_NAME; final String DATA_FILE_NAME =
-		 * "data.txt";
-		 */
-		Context mContext;
-
-		public DBHelper(Context context, String dbName) {
-			super(context, dbName, null, DB_VER);
-			this.DB_NAME = dbName;
-			Log.d("CordovaPlugin", "constructor called");
-			mContext = context;
-
-			db = super.getWritableDatabase();
-
-			Log.d(TAG, "...DB ready");
-		}
-
-		public void importData(String filePath, String fileName) {
-			String path = filePath + '/' + fileName;
-
-			Log.d(TAG, path);
-
-			String table = fileName.substring(0, fileName.indexOf("_"));
-			File file = new File(path);
-			FileInputStream stream = null;
-
-			String jString = null;
-			try {
-				stream = new FileInputStream(file);
-				FileChannel fc = stream.getChannel();
-				MappedByteBuffer bb = fc.map(FileChannel.MapMode.READ_ONLY, 0,
-						fc.size());
-				/* Instead of using default, pass in a decoder. */
-				jString = Charset.defaultCharset().decode(bb).toString();
-				this.fillData(table, jString);
-			} catch (Exception e) {
-				Log.e(TAG, "error read table json");
-				Log.e(TAG, e.getMessage());
-
-			} finally {
-				try {
-					stream.close();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-
-				if (jString != null) {
-					// Log.d(TAG,jString);
-				}
-			}
-		}
-
-		@Override
-		public void onCreate(SQLiteDatabase db) {
-			Log.d("CordovaPlugin", "onCreate() called");
-			// db.execSQL(CREATE_TABLE);
-			// fillData(db);
-		}
-
-		@Override
-		public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-			// db.execSQL(DROP_TABLE);
-			onCreate(db);
-		}
-
-		private void createTable(String name, String columns) {
-			try {
-				db.execSQL("CREATE TABLE " + name + " (" + columns + ")");
-			} catch (Exception e) {
-				Log.e(TAG, "error create table: " + name);
-				Log.e(TAG, e.getMessage());
-			}
-		}
-
-		private void insertData(String table, String columns, StringBuilder data) {
-			// Log.d(TAG, "SQL: table" + table + " columns:" + columns );
-
-			try {
-				db.execSQL("INSERT INTO " + table + " (" + columns
-						+ ") VALUES " + data);
-			} catch (Exception e) {
-				Log.e(TAG, "error write to DB");
-				Log.e(TAG, e.getMessage());
-			}
-		}
-
-		private void fillData(String table, String json) {
-			int step = 0;
-			try {
-				JSONObject obj = new JSONObject(json);
-				obj = obj.getJSONObject("data");
-				JSONArray columnsArr = obj.getJSONArray("columns");
-				Log.d(TAG, table + "rows:" + columnsArr.length());
-
-				String columns = columnsArr.join(",");
-				JSONArray rows = obj.getJSONArray("rows");
-				StringBuilder data = new StringBuilder();
-				int portion = 0;
-
-				this.createTable(table, columns);
-
-				for (int i = 0; i < rows.length(); i++) {
-					step = i;
-					JSONArray row = rows.getJSONArray(i);
-					data.append("(");
-					// safeData(row);
-					data.append(row.join(","));
-
-					portion++;
-					if (i == rows.length() - 1 || portion == 500) {
-						data.append(")");
-						portion = 0;
-						insertData(table, columns, data);
-						data = new StringBuilder();
-					} else
-						data.append("),");
-				}
-
-			} catch (JSONException e) {
-				// TODO Auto-generated catch block
-				Log.e(TAG, step + " table:" + table + ": error parse json");
-				e.printStackTrace();
-			}
-
-			/*
-			 * ArrayList<String> data = getData(); for(String dt:data)
-			 * Log.d("CordovaPlugin","item="+dt);
-			 * 
-			 * if( db != null ){ ContentValues values;
-			 * 
-			 * for(String dat:data){ values = new ContentValues();
-			 * values.put("todo", dat); // db.insert(TABLE_NAME, null, values);
-			 * } } else { Log.d("CordovaPlugin","db null"); }
-			 */
-		}
-
-		public String[] selectData(String sql){
-			String[] result = null;
 		
-			
-			
-			Cursor c = db.rawQuery(sql, null);
-            Log.d(TAG, "..SQL" +  c.toString());		
-
-			
-			return result;
-		}  
-	}
-
 	private void ReplaceDB() {
 		
 		Log.d(TAG, "..ReplaceDB");
@@ -573,31 +318,7 @@ public class DownloadDB extends CordovaPlugin {
 		cordovaDBPath = dbPath + c.getString(0) + "/";
 		cordovaDBName = c.getString(1);
 				
-        //Log.d(TAG, "..SQL " +  c.getString(0));
-        
-        
-		
-		//DBHelper db = new DBHelper(activity.getApplicationContext(), dbName + ".db");
-		//Log.d(TAG, "..db open");
-		
-		//db.selectData("Select count(*) from athletes");
-		
-		Log.d(TAG, "..db open 1");
-		/*try{
-			master_db = SQLiteDatabase.openDatabase("/data/data/"+pName+"/databases/Databases.db", null, SQLiteDatabase.OPEN_READONLY);
-		}catch(Exception e){
-			Log.d(TAG, "..error " + e.getMessage()); 
-			
-			master_db = SQLiteDatabase.openDatabase("/data/data/"+pName+"/app_database/Databases.db", null, SQLiteDatabase.OPEN_READONLY);
-		} 
-		
-		Log.d(TAG, "..ReplaceDB 1");
-		
-		Cursor c = master_db.rawQuery("Select origin, '/', path from Databases where name=" + dbName, null);
-         Log.d(TAG, "..SQL" +  c.toString());		
-
-		 master_db.close();
-		 */
+       
 	}
 
 }
