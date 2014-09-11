@@ -77,11 +77,17 @@ public class DownloadDB extends CordovaPlugin {
 		
 			activity = this.cordova.getActivity();
 
-			String[] params = args.getString(0).split(",");
+			//String[] params = args.getString(0).split(",");
 
-			url = params[0] + params[1]; // url + filename
+			//url = params[0] + params[1]; // url + filename
+			//Log.d(TAG, "!!! download zip DB from url: " + url);
+			//dbName = params[1];
+
+			JSONObject obj = new JSONObject(args.getString(0));
+			dbName = obj.getString("nameDB");
+			url = obj.getString("url") + dbName;
 			Log.d(TAG, "!!! download zip DB from url: " + url);
-			dbName = params[1];
+
 			zipPath = activity.getApplicationContext().getFilesDir().getPath();
 			zipPath = zipPath.substring(0, zipPath.lastIndexOf("/")) + "/databases";
  
