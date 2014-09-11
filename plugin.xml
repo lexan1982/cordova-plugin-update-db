@@ -45,5 +45,21 @@
       <source-file src="src/android/DownloadDB.java" target-dir="src/com/ideateam/plugin" />
       
     </platform>
+    
+     <!-- ios -->
+    <platform name="ios">
+        <config-file target="config.xml" parent="/*">
+            <feature name="DownloadDB">
+                <param name="ios-package" value="DownloadDB"/>
+            </feature>
+        </config-file>
+        
+   
+        <source-file src="src/ios/DownloadDB.m" />
+        <header-file src ="src/ios/DownloadDB.h" />
+        
+        <framework src="libsqlite3.0.dylib" />
+        
+    </platform>
 
 </plugin>
