@@ -196,6 +196,10 @@
         [[NSFileManager defaultManager] moveItemAtPath:dbFullName toPath:cordovaDBFullName error:&error];
         
     }
+    else {
+     
+        plgResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Database download error"];
+    }
     
     [[NSFileManager defaultManager] removeItemAtPath:filePath error:&error];
     
