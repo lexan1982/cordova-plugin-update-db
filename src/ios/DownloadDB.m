@@ -179,11 +179,21 @@
     
     NSString* filePath = [NSString stringWithFormat:@"%@/%@", self.zipPath, @"database.zip"];
     NSString* destination = [self.zipPath stringByAppendingPathComponent:self.cordovaDBPath];
+    NSError* error;
     
     BOOL unzipWorked = [SSZipArchive unzipFileAtPath:filePath toDestination:destination];
     NSString* cordovaDBFullName = [destination stringByAppendingPathComponent:self.cordovaDBName];
     
-    NSError* error;
+    if (!unzipWorked) {
+        
+         [[NSFileManager defaultManager] removeItemAtPath:filePath error:&error];
+         plgResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Database download error"];
+        [self.commandDelegate sendPluginResult:plgResult callbackId:callbackId];
+
+        return;
+    }
+    
+    
     if ([[NSFileManager defaultManager] fileExistsAtPath:cordovaDBFullName]) {
     
         [[NSFileManager defaultManager] removeItemAtPath:cordovaDBFullName error:&error];
@@ -194,6 +204,7 @@
     if ([[NSFileManager defaultManager] fileExistsAtPath:dbFullName]) {
         
         [[NSFileManager defaultManager] moveItemAtPath:dbFullName toPath:cordovaDBFullName error:&error];
+        plgResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"Database switched"];
         
     }
     else {
@@ -202,9 +213,6 @@
     }
     
     [[NSFileManager defaultManager] removeItemAtPath:filePath error:&error];
-    
-    
-     plgResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"Database switched"];
     [self.commandDelegate sendPluginResult:plgResult callbackId:callbackId];
     
 }
