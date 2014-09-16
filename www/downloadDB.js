@@ -48,6 +48,6 @@ module.exports = function (successCallback, errorCallback, message, forceAsync) 
     } else if (forceAsync) {
         action += 'Async';
     }
-alert(JSON.stringify(args))
+
     exec(successCallback, errorCallback, "DownloadDB", action, args);
 };
