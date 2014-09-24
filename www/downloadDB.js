@@ -29,9 +29,25 @@ var exec = require('cordova/exec'),
  * @param message  The string to be echoed.
  * @param forceAsync  Whether to force an async return value (for testing native->js bridge).
  */
-module.exports = function (successCallback, errorCallback, action, params) {
+module.exports = function (successCallback, errorCallback, message, forceAsync) {
     
-   
+    var action = 'downloadDB';
+    var messageIsMultipart = (utils.typeName(message) == "Array");
+    var args = messageIsMultipart ? message : [message];
 
-    exec(successCallback, errorCallback, "DownloadDB", action, params);
+    if (utils.typeName(message) == 'ArrayBuffer') {
+        action += 'ArrayBuffer';
+        if (forceAsync) {
+            action += 'Async';
+        }
+    } else if (messageIsMultipart) {
+        if (forceAsync) {
+            console.warn('Cannot echo MultiPart Array with forced async, falling back to sync.');
+        }
+        action += 'MultiPart';
+    } else if (forceAsync) {
+        action += 'Async';
+    }
+
+    exec(successCallback, errorCallback, "DownloadDB", action, args);
 };
