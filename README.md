@@ -27,6 +27,7 @@ Call function <b>cordova.downloadDB</b> from js code with params:
   
   Cordova Plugin - get DB size
   <pre><i>action</i> - 'sizeDB'
+  <i>params</i> - json object:
   { db: 'databaseName' }</pre>
   
 ========================
