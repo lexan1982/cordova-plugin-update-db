@@ -24,9 +24,6 @@ Call function <b>cordova.downloadDB</b> from js code with params:
   <i>params</i> - json object: 
   { nameDB: 'databaseName' }</pre>
   
-  Cordova Plugin - remove all DBs from master.db & card
-  <pre><i>action</i> - 'removeAllDBs'</pre>
-
   
   Cordova Plugin - get DB size
   <pre><i>action</i> - 'sizeDB'
