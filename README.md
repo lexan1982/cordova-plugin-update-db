@@ -4,11 +4,11 @@ cordova-plugin-update-db
 
 Call function <b>cordova.downloadDB</b> from js code with params:
 
-  <pre>cordova.downloadDB(callback, error, action, params);</pre>
+  <pre>cordova.downloadDB(callback, error, action, params);
   
   <i>callback</i> - success function<br/>
   <i>error</i> - error function<br/>
-  
+  </pre>
   
   Cordova Plugin - download remote DB and save to the sdcard
   <i>action</i> - 'downloadDB'
