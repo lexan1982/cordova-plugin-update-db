@@ -11,23 +11,23 @@ Call function <b>cordova.downloadDB</b> from js code with params:
   </pre>
   
   Cordova Plugin - download remote DB and save to the sdcard
-  <i>action</i> - 'downloadDB'
+  <pre><i>action</i> - 'downloadDB'
   <i>params</i> - json object
-  <pre>{ db: 'databaseName', url: 'http://domain.com/data/' }</pre>
+  { db: 'databaseName', url: 'http://domain.com/data/' }</pre>
   
   
   Cordova Plugin - remove DB from master.db & card
-  <i>action</i> - 'removeDB': 
+  <pre><i>action</i> - 'removeDB': 
   <i>params</i> - json object: 
-  <pre>{ db: 'databaseName' }</pre>
+  { db: 'databaseName' }</pre>
   
   Cordova Plugin - remove all DBs from master.db & card
-  <i>action</i> - 'removeAllDBs'
+  <pre><i>action</i> - 'removeAllDBs'</pre>
 
   
   Cordova Plugin - get DB size
-  <i>action</i> - 'sizeDB'
-  <pre>{ db: 'databaseName' }</pre>
+  <pre><i>action</i> - 'sizeDB'
+  { db: 'databaseName' }</pre>
   
 ========================
 
