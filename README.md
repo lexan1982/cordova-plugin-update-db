@@ -13,13 +13,16 @@ Call function <b>cordova.downloadDB</b> from js code with params:
   Cordova Plugin - download remote DB and save to the sdcard
   <pre><i>action</i> - 'downloadDB'
   <i>params</i> - json object
-  { db: 'databaseName', url: 'http://domain.com/data/' }</pre>
+  {
+    nameDB: 'databaseName', 
+    url: 'http://domain.com/data/' 
+  }</pre>
   
   
   Cordova Plugin - remove DB from master.db & card
   <pre><i>action</i> - 'removeDB': 
   <i>params</i> - json object: 
-  { db: 'databaseName' }</pre>
+  { nameDB: 'databaseName' }</pre>
   
   Cordova Plugin - remove all DBs from master.db & card
   <pre><i>action</i> - 'removeAllDBs'</pre>
@@ -28,7 +31,7 @@ Call function <b>cordova.downloadDB</b> from js code with params:
   Cordova Plugin - get DB size
   <pre><i>action</i> - 'sizeDB'
   <i>params</i> - json object:
-  { db: 'databaseName' }</pre>
+  { nameDB: 'databaseName' }</pre>
   
 ========================
 
