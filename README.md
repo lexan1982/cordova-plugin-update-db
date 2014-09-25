@@ -8,9 +8,9 @@ Call function <b>cordova.downloadDB</b> from js code with params:
   
   <i>callback</i> - success function<br/>
   <i>error</i> - error function<br/>
-  <i>action</i> - 'downloadDB'
-  <i>params</i> - json object
-  </pre>
+  <i>action</i> - 'downloadDB'<br/>
+  <i>params</i> - json object<br/>
+ 
   {
     nameDB: 'databaseName', 
     url: 'http://domain.com/data/' 
