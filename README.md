@@ -1,20 +1,23 @@
 cordova-plugin-update-db
+
+Call function <b>cordova.downloadDB</b> from js code with params:
+
+<pre>cordova.downloadDB(callback, error, action, params);</pre>
+  
 ========================
 
 
-Dwnload zip with DB and replace it in sdcard - call function <b>cordova.downloadDB</b> from js code with params:
-
-  <pre>cordova.downloadDB(callback, error, action, params);
-  
+Cordova Plugin - download zip with DB and replace it in sdcard - 
+  <pre>
   <i>callback</i> - success function<br/>
   <i>error</i> - error function<br/>
   <i>action</i> - 'downloadDB'<br/>
   <i>params</i> - json object<br/>
  
-  {
+ {
     nameDB: 'databaseName', 
     url: 'http://domain.com/data/' 
-  }
+ }
   </pre>
   
   Cordova Plugin - download remote DB and save to the sdcard
