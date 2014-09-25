@@ -7,7 +7,7 @@ Call function <b>cordova.downloadDB</b> from js code with params:
 ========================
 
 
-Cordova Plugin - download zip with DB and replace it in sdcard - 
+Cordova Plugin - download zip with DB and replace it on sdcard 
 <pre>
 <i>callback</i> - success function<br/>
 <i>error</i> - error function<br/>
@@ -20,7 +20,7 @@ Cordova Plugin - download zip with DB and replace it in sdcard -
  }
 </pre>
   
-  Cordova Plugin - download remote DB and save to the sdcard
+  Cordova Plugin - remove DB from master.db & sdcard
   <pre>
   <i>action</i> - 'remoteDB'
   <i>params</i> - json object
@@ -28,7 +28,7 @@ Cordova Plugin - download zip with DB and replace it in sdcard -
   </pre>
   
   
-  Cordova Plugin - remove all DB from master.db & card
+  Cordova Plugin - remove all DBs from master.db & sdcard
   <pre>
   <i>action</i> - 'removeAllDBs': 
   <i>params</i> - null: 
