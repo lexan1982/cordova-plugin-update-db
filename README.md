@@ -22,7 +22,7 @@ Cordova Plugin - download zip with DB and replace it on sdcard
   
   Cordova Plugin - remove DB from master.db & sdcard
   <pre>
-  <i>action</i> - 'remoteDB'
+  <i>action</i> - 'removeDB'
   <i>params</i> - json object
   { nameDB: 'databaseName' }
   </pre>
