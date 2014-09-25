@@ -53,6 +53,7 @@ public class DownloadDB extends CordovaPlugin {
 
 	final private String TAG = "CordovaPlugin";
 	private String zipPath;
+	
 	private String cordovaDBPath;
 	private String cordovaDBName;
 	private String url;
@@ -73,8 +74,7 @@ public class DownloadDB extends CordovaPlugin {
 	 */
 	@SuppressLint("NewApi")
 	public boolean execute(String action, final JSONArray args,
-			final CallbackContext callbackContext) throws JSONException {
-		Log.d(TAG, "...!!! download action " + action);		
+			final CallbackContext callbackContext) throws JSONException {		
 		if (action.equals("downloadDB")) {
 		
 			activity = this.cordova.getActivity();
@@ -97,13 +97,54 @@ public class DownloadDB extends CordovaPlugin {
 			
 		} 
 		else if(action.equals("removeDB")) {
+			
+			cordova.getActivity().runOnUiThread(new Runnable() {
+            	
+                public void run() {       
+                	
+                	Log.d(TAG, "... removeDB name " + dbName);                              	
+                	 
+					try {
+						JSONObject obj = new JSONObject(args.getString(0));
+					    		
+	                	String dbName = obj.getString("nameDB");
+	                	String dbPath = activity.getApplicationContext().getFilesDir().getPath();
+	                		   dbPath = dbPath.substring(0, dbPath.lastIndexOf("/")) + "/app_database/";
+	        			
+	        			SQLiteDatabase master_db = SQLiteDatabase.openDatabase(dbPath + "Databases.db", null,  SQLiteDatabase.OPEN_READWRITE);
+	        			
+	        			Cursor c = master_db.rawQuery("SELECT origin, path FROM Databases WHERE name='"+dbName+"'", null);
+	        			c.moveToFirst();
+	        			
+	        			String cordovaDBPath = dbPath + c.getString(0) + "/";
+	        			String cordovaDBName = c.getString(1);
+	                	c.close();
+	                	
+	        			master_db.rawQuery("DELETE FROM Databases WHERE name='"+dbName+"'", null);
+	        			master_db.close();
+	        			
+	        			File file = new File(cordovaDBPath + cordovaDBName);
+	        			Boolean isDeleted = file.delete();
+	        			
+	        			Log.d(TAG, "..removeDB path " + cordovaDBPath + cordovaDBName + " isDeleted " + isDeleted);
+	        			
+	                	callbackContext.sendPluginResult( new PluginResult(PluginResult.Status.OK, args.optString(0)));
+	                	
+					} catch (JSONException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}    
+                }
+            });
+        }
+		else if(action.equals("removeAllDBs")) {
             cordova.getActivity().runOnUiThread(new Runnable() {
             	
             	JSONObject obj = new JSONObject(args.getString(0));        		
-            	String dbName = obj.getString("nameDB");
+            	
             	
                 public void run() {                	
-                	Log.d("test","..removeDB " + dbName);                	
+                	Log.d(TAG, "... removeAllDBs " );      	
                     callbackContext.sendPluginResult( new PluginResult(PluginResult.Status.OK, args.optString(0)));
                 }
             });
@@ -112,9 +153,12 @@ public class DownloadDB extends CordovaPlugin {
         else if(action.equals("sizeDB")) {
             cordova.getActivity().runOnUiThread(new Runnable() {
             	
-                public void run() {
+            	JSONObject obj = new JSONObject(args.getString(0));        		
+            	String dbName = obj.getString("nameDB");
+                
+            	public void run() {
                 	
-                	Log.d("test","..sizeDB ");                	
+                	Log.d("test",".. sizeDB dbName " + dbName);                	
                     callbackContext.sendPluginResult( new PluginResult(PluginResult.Status.OK, args.optString(0)));
                 }
             });
