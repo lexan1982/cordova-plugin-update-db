@@ -89,7 +89,9 @@ public class DownloadDB extends CordovaPlugin {
  
 			Log.d(TAG, ".. !!! DB path: " + zipPath);
 			
+			
 			ReplaceDB();
+			
 			DownloadFile();
 			 
 			this.callbackContext = callbackContext;
@@ -120,13 +122,14 @@ public class DownloadDB extends CordovaPlugin {
 	        			String cordovaDBName = c.getString(1);
 	                	c.close();
 	                	
-	        			master_db.rawQuery("DELETE FROM Databases WHERE name='"+dbName+"'", null);
+	        			
+	        			int deletedRows =master_db.delete("Databases","name='"+dbName+"'", null);
 	        			master_db.close();
 	        			
 	        			File file = new File(cordovaDBPath + cordovaDBName);
 	        			Boolean isDeleted = file.delete();
 	        			
-	        			Log.d(TAG, "..removeDB path " + cordovaDBPath + cordovaDBName + " isDeleted " + isDeleted);
+	        			Log.d(TAG, "..removeDB path " + cordovaDBPath + cordovaDBName + " isDeleted " + isDeleted + " del rows " + deletedRows);
 	        			
 	                	callbackContext.sendPluginResult( new PluginResult(PluginResult.Status.OK, args.optString(0)));
 	                	
@@ -137,19 +140,7 @@ public class DownloadDB extends CordovaPlugin {
                 }
             });
         }
-		else if(action.equals("removeAllDBs")) {
-            cordova.getActivity().runOnUiThread(new Runnable() {
-            	
-            	JSONObject obj = new JSONObject(args.getString(0));        		
-            	
-            	
-                public void run() {                	
-                	Log.d(TAG, "... removeAllDBs " );      	
-                    callbackContext.sendPluginResult( new PluginResult(PluginResult.Status.OK, args.optString(0)));
-                }
-            });
-        }
-       
+		       
         else if(action.equals("sizeDB")) {
             cordova.getActivity().runOnUiThread(new Runnable() {
             	
@@ -362,7 +353,7 @@ public class DownloadDB extends CordovaPlugin {
 		
 	private void ReplaceDB() {
 		
-		Log.d(TAG, "..ReplaceDB");
+		Log.d(TAG, "..Get physical DB name and path");
 		
 		String dbPath = zipPath.substring(0, zipPath.lastIndexOf("/")) + "/app_database/";
 		SQLiteDatabase master_db = SQLiteDatabase.openDatabase(dbPath + "Databases.db", null,  SQLiteDatabase.OPEN_READONLY);
@@ -372,6 +363,8 @@ public class DownloadDB extends CordovaPlugin {
 		
 		cordovaDBPath = dbPath + c.getString(0) + "/";
 		cordovaDBName = c.getString(1);
+		
+		Log.d(TAG, ": " + cordovaDBPath + cordovaDBName);
 				
        
 	}
