@@ -8,27 +8,33 @@ Call function <b>cordova.downloadDB</b> from js code with params:
   
   <i>callback</i> - success function<br/>
   <i>error</i> - error function<br/>
-  </pre>
-  
-  Cordova Plugin - download remote DB and save to the sdcard
-  <pre><i>action</i> - 'downloadDB'
+  <i>action</i> - 'downloadDB'
   <i>params</i> - json object
+  </pre>
   {
     nameDB: 'databaseName', 
     url: 'http://domain.com/data/' 
   }</pre>
   
+  Cordova Plugin - download remote DB and save to the sdcard
+  <i>action</i> - 'remoteDB'
+  <i>params</i> - json object
+  <pre>
+  { nameDB: 'databaseName' }
+  </pre>
   
-  Cordova Plugin - remove DB from master.db & card
-  <pre><i>action</i> - 'removeDB': 
-  <i>params</i> - json object: 
-  { nameDB: 'databaseName' }</pre>
+  
+  Cordova Plugin - remove all DB from master.db & card
+  <pre><i>action</i> - 'removeAllDBs': 
+  <i>params</i> - null: 
   
   
   Cordova Plugin - get DB size
-  <pre><i>action</i> - 'sizeDB'
+  <i>action</i> - 'sizeDB'
   <i>params</i> - json object:
-  { nameDB: 'databaseName' }</pre>
+  <pre>
+  { nameDB: 'databaseName' }
+  </pre>
   
 ========================
 
