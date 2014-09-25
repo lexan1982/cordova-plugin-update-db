@@ -8,17 +8,17 @@ Call function <b>cordova.downloadDB</b> from js code with params:
 
 
 Cordova Plugin - download zip with DB and replace it in sdcard - 
-  <pre>
-  <i>callback</i> - success function<br/>
-  <i>error</i> - error function<br/>
-  <i>action</i> - 'downloadDB'<br/>
-  <i>params</i> - json object<br/>
+<pre>
+<i>callback</i> - success function<br/>
+<i>error</i> - error function<br/>
+<i>action</i> - 'downloadDB'<br/>
+<i>params</i> - json object<br/>
  
  {
     nameDB: 'databaseName', 
     url: 'http://domain.com/data/' 
  }
-  </pre>
+</pre>
   
   Cordova Plugin - download remote DB and save to the sdcard
   <pre>
