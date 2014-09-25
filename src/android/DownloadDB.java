@@ -74,6 +74,7 @@ public class DownloadDB extends CordovaPlugin {
 	@SuppressLint("NewApi")
 	public boolean execute(String action, final JSONArray args,
 			final CallbackContext callbackContext) throws JSONException {
+		Log.d(TAG, "...!!! download action " + action);		
 		if (action.equals("downloadDB")) {
 		
 			activity = this.cordova.getActivity();
