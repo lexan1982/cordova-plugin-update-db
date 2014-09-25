@@ -65,6 +65,91 @@
     [self startDBDownload:self.url];
 }
 
+- (void) removeDB: (CDVInvokedUrlCommand*)command
+{
+    NSMutableDictionary* args = [command.arguments objectAtIndex:0];
+    
+    self.dbName = [args objectForKey:@"nameDB"];
+    callbackId = command.callbackId;
+    [self replaceDB];
+
+    NSString* destination = [self.zipPath stringByAppendingPathComponent:self.cordovaDBPath];
+    NSString* cordovaDBFullName = [destination stringByAppendingPathComponent:self.cordovaDBName];
+    NSError* error;
+    
+    if ([[NSFileManager defaultManager] fileExistsAtPath:cordovaDBFullName]) {
+    
+        [[NSFileManager defaultManager] removeItemAtPath:cordovaDBFullName error:&error];
+    }
+    
+    [self deleteMasterDBRecord:self.dbName];
+    
+    plgResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"Database deleted"];
+    [self.commandDelegate sendPluginResult:plgResult callbackId:callbackId];
+}
+
+- (void) deleteMasterDBRecord:(NSString*) _dbName
+{
+    NSString *localStorageDirectory = [NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+    NSString *dbPath = [localStorageDirectory stringByAppendingPathComponent:@"WebKit/LocalStorage/Databases.db"];
+    
+    sqlite3 *db;
+    if (sqlite3_open([dbPath UTF8String], &db) != SQLITE_OK) {
+        plgResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Database delete error"];
+        [self.commandDelegate sendPluginResult:plgResult callbackId:callbackId];
+        return;
+    }
+    else {
+        
+        NSString* query = [NSString stringWithFormat:@"DELETE FROM Databases WHERE name='%@'", _dbName];
+        sqlite3_stmt *compiledStatement;
+        
+        if(sqlite3_prepare_v2(db, [query UTF8String], -1, &compiledStatement, nil) == SQLITE_OK) {
+            
+            sqlite3_step(compiledStatement);
+        } else {
+            plgResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Database download error"];
+            [self.commandDelegate sendPluginResult:plgResult callbackId:callbackId];
+        }
+        
+        sqlite3_finalize(compiledStatement);
+        sqlite3_close(db);
+    }
+}
+
+- (void) removeAllDBs: (CDVInvokedUrlCommand*)command
+{
+    
+}
+
+- (void) getDBSize: (CDVInvokedUrlCommand*)command
+{
+    NSMutableDictionary* args = [command.arguments objectAtIndex:0];
+    
+    self.dbName = [args objectForKey:@"nameDB"];
+    callbackId = command.callbackId;
+    [self replaceDB];
+    
+    NSString* destination = [self.zipPath stringByAppendingPathComponent:self.cordovaDBPath];
+    NSString* cordovaDBFullName = [destination stringByAppendingPathComponent:self.cordovaDBName];
+   
+    NSString* dbSize;
+    NSError* error;
+    
+    if ([[NSFileManager defaultManager] fileExistsAtPath:cordovaDBFullName]) {
+        
+        NSDictionary* attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:cordovaDBFullName error:&error];
+        
+        unsigned long long size = [attributes fileSize];
+        dbSize = [NSString stringWithFormat:@"%llu", size];
+        
+        plgResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:dbSize];
+        [self.commandDelegate sendPluginResult:plgResult callbackId:callbackId];
+    }
+    
+}
+
+
 - (void) replaceDB
 {
     
