@@ -110,26 +110,16 @@ public class DownloadDB extends CordovaPlugin {
 						JSONObject obj = new JSONObject(args.getString(0));
 					    		
 	                	String dbName = obj.getString("nameDB");
-	                	String dbPath = activity.getApplicationContext().getFilesDir().getPath();
-	                		   dbPath = dbPath.substring(0, dbPath.lastIndexOf("/")) + "/app_database/";
-	        			
-	        			SQLiteDatabase master_db = SQLiteDatabase.openDatabase(dbPath + "Databases.db", null,  SQLiteDatabase.OPEN_READWRITE);
-	        			
-	        			Cursor c = master_db.rawQuery("SELECT origin, path FROM Databases WHERE name='"+dbName+"'", null);
-	        			c.moveToFirst();
-	        			
-	        			String cordovaDBPath = dbPath + c.getString(0) + "/";
-	        			String cordovaDBName = c.getString(1);
-	                	c.close();
 	                	
-	        			 
-	        			int deletedRows =master_db.delete("Databases","name='"+dbName+"'", null);
-	        			master_db.close();
+	                	DeviceDB dDB = GetDeviceDB(dbName);
+	                	 
+	        			int deletedRows = dDB.master_db.delete("Databases","name='" + dbName + "'", null);
+	        			dDB.master_db.close();
 	        			
-	        			File file = new File(cordovaDBPath + cordovaDBName);
+	        			File file = new File(dDB.cordovaDBPath + dDB.cordovaDBName);
 	        			Boolean isDeleted = file.delete();
 	        			
-	        			Log.d(TAG, "..removeDB path " + cordovaDBPath + cordovaDBName + " isDeleted " + isDeleted + " del rows " + deletedRows);
+	        			Log.d(TAG, "..removeDB path " + dDB.cordovaDBPath + dDB.cordovaDBName + " isDeleted " + isDeleted + " del rows " + deletedRows);
 	        			
 	                	callbackContext.sendPluginResult( new PluginResult(PluginResult.Status.OK, args.optString(0)));
 	                	
@@ -138,19 +128,27 @@ public class DownloadDB extends CordovaPlugin {
 						e.printStackTrace();
 					}    
                 }
+
+				
             });
         }
 		       
         else if(action.equals("sizeDB")) {
+        	
+        	long fileSize;
+        	
             cordova.getActivity().runOnUiThread(new Runnable() {
             	
             	JSONObject obj = new JSONObject(args.getString(0));        		
             	String dbName = obj.getString("nameDB");
                 
+            	DeviceDB dDB = GetDeviceDB(dbName);
+            	File file = new File(dDB.cordovaDBPath + dDB.cordovaDBName);
+            	
             	public void run() {
                 	
                 	Log.d("test",".. sizeDB dbName " + dbName);                	
-                    callbackContext.sendPluginResult( new PluginResult(PluginResult.Status.OK, args.optString(0)));
+                    callbackContext.sendPluginResult( new PluginResult(PluginResult.Status.OK, file.length()));
                 }
             });
         }
@@ -182,7 +180,24 @@ public class DownloadDB extends CordovaPlugin {
 		});
 
 	}
-
+private DeviceDB GetDeviceDB(String dbName) {
+	DeviceDB dDB = new DeviceDB();
+	
+	String dbPath = activity.getApplicationContext().getFilesDir().getPath();
+	   dbPath = dbPath.substring(0, dbPath.lastIndexOf("/")) + "/app_database/";
+	
+	   dDB.master_db = SQLiteDatabase.openDatabase(dbPath + "Databases.db", null,  SQLiteDatabase.OPEN_READWRITE);
+	
+	Cursor c = dDB.master_db.rawQuery("SELECT origin, path FROM Databases WHERE name='"+dbName+"'", null);
+	c.moveToFirst();
+	
+	dDB.cordovaDBPath = dbPath + c.getString(0) + "/";
+	dDB.cordovaDBName = c.getString(1);
+	c.close();
+	
+	return dDB;
+	
+}
 	class DownloadFileAsync extends AsyncTask<String, String, String> {
 		boolean isDownloaded = false;
 
@@ -370,6 +385,15 @@ public class DownloadDB extends CordovaPlugin {
        
 	}
 
+	class DeviceDB{
+		
+		SQLiteDatabase master_db;
+		String cordovaDBPath;
+		String cordovaDBName;		
+
+	}
+	
+	
 }
 
 
