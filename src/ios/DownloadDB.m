@@ -122,7 +122,7 @@
     
 }
 
-- (void) getDBSize: (CDVInvokedUrlCommand*)command
+- (void) sizeDB: (CDVInvokedUrlCommand*)command
 {
     NSMutableDictionary* args = [command.arguments objectAtIndex:0];
     
