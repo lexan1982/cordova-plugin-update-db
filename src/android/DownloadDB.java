@@ -96,9 +96,9 @@ public class DownloadDB extends CordovaPlugin {
 			 
 			this.callbackContext = callbackContext;
 			
-			
+			 
 		} 
-		else if(action.equals("removeDB")) {
+		else if(action.equals("removeDB")) { 
 			
 			cordova.getActivity().runOnUiThread(new Runnable() {
             	
@@ -122,7 +122,7 @@ public class DownloadDB extends CordovaPlugin {
 	        			String cordovaDBName = c.getString(1);
 	                	c.close();
 	                	
-	        			
+	        			 
 	        			int deletedRows =master_db.delete("Databases","name='"+dbName+"'", null);
 	        			master_db.close();
 	        			
@@ -363,7 +363,8 @@ public class DownloadDB extends CordovaPlugin {
 		
 		cordovaDBPath = dbPath + c.getString(0) + "/";
 		cordovaDBName = c.getString(1);
-		
+		master_db.close();
+		c.close();
 		Log.d(TAG, ": " + cordovaDBPath + cordovaDBName);
 				
        
