@@ -214,7 +214,7 @@ private DeviceDB GetDeviceDB(String dbName) {
 
 		}
 
-		@Override
+		@Override 
 		protected String doInBackground(String... aurl) {
 			int count;
 
@@ -227,8 +227,13 @@ private DeviceDB GetDeviceDB(String dbName) {
 				int lenghtOfFile = conexion.getContentLength();
 
 				String path = String.format("%s/%s.zip", zipPath, dbName);
-
-				mProgressDialog.setMax(lenghtOfFile / 1024);
+				
+				if(lenghtOfFile > 0)
+					mProgressDialog.setMax(lenghtOfFile / 1024);
+				
+					
+				
+				
 				InputStream input = new BufferedInputStream(url.openStream());
 
 				Log.d(TAG, "zip path:" + path);
@@ -248,7 +253,7 @@ private DeviceDB GetDeviceDB(String dbName) {
 
 				while ((count = input.read(data)) != -1) {
 					total += count;					
-					publishProgress("" + (int) ((total * 1024) / lenghtOfFile));
+					publishProgress("" + (int) (total / 1024));
 					output.write(data, 0, count);
 
 				}
