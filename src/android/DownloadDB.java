@@ -90,8 +90,6 @@ public class DownloadDB extends CordovaPlugin {
 			Log.d(TAG, ".. !!! DB path: " + zipPath);
 			
 			
-			ReplaceDB();
-			
 			DownloadFile();
 			 
 			this.callbackContext = callbackContext;
@@ -161,6 +159,8 @@ public class DownloadDB extends CordovaPlugin {
 
 	private void CallbackResult(Boolean success,String msg){
 		
+		Log.d(TAG, " ..CallbackResult "+success +"  "+msg);
+		
 		if(success)
 			this.callbackContext.sendPluginResult(new PluginResult(
 						PluginResult.Status.OK, msg));
@@ -226,13 +226,14 @@ private DeviceDB GetDeviceDB(String dbName) {
 
 				int lenghtOfFile = conexion.getContentLength();
 
-				String path = String.format("%s/%s.zip", zipPath, dbName);
 				
-				if(lenghtOfFile > 0)
-					mProgressDialog.setMax(lenghtOfFile / 1024);
 				
+				if(lenghtOfFile > 0){
+					String path = String.format("%s/%s.zip", zipPath, dbName);
+					ReplaceDB();
 					
-				
+				mProgressDialog.setMax(lenghtOfFile / 1024);		
+					
 				
 				InputStream input = new BufferedInputStream(url.openStream());
 
@@ -262,10 +263,13 @@ private DeviceDB GetDeviceDB(String dbName) {
 				output.close();
 				input.close();
 				isDownloaded = true;
+				
+				}
 
 			} catch (Exception e) {
-				CallbackResult(false, e.getMessage());
 				Log.e(TAG, e.getMessage());
+				CallbackResult(false, e.getMessage());
+				
 			}
 
 			return null;
@@ -283,7 +287,7 @@ private DeviceDB GetDeviceDB(String dbName) {
 
 			UnzipUtility unzipper = new UnzipUtility();
 
-			if (isDownloaded)
+			if (isDownloaded){
 
 				try {
 
@@ -303,6 +307,10 @@ private DeviceDB GetDeviceDB(String dbName) {
 					ex.printStackTrace();
 					CallbackResult(false, ex.getMessage());
 				}
+			}else{
+				
+				CallbackResult(false, "Can not find a zip with DB");
+			}
 		}
 
 		
