@@ -72,7 +72,7 @@ public class DownloadDB extends CordovaPlugin {
 	 *            JSONArry of arguments for the plugin.
 	 * @param callbackContext
 	 *            The callback context from which we were invoked.
-	 */
+	 */ 
 	@SuppressLint("NewApi")
 	public boolean execute(String action, final JSONArray args,
 			final CallbackContext callbackContext) throws JSONException {		
@@ -218,7 +218,7 @@ public class DownloadDB extends CordovaPlugin {
 private DeviceDB GetDeviceDB(String dbName) {
 	DeviceDB dDB = new DeviceDB();
 	
-	String dbPath = activity.getApplicationContext().getFilesDir().getPath();
+	String dbPath = cordova.getActivity().getApplicationContext().getFilesDir().getPath();
 	   dbPath = dbPath.substring(0, dbPath.lastIndexOf("/")) + "/app_database/";
 	
 	   dDB.master_db = SQLiteDatabase.openDatabase(dbPath + "Databases.db", null,  SQLiteDatabase.OPEN_READWRITE);
