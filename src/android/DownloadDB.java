@@ -26,6 +26,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.zip.ZipEntry;
@@ -89,10 +90,41 @@ public class DownloadDB extends CordovaPlugin {
  
 			Log.d(TAG, ".. !!! DB path: " + zipPath);
 			
-			
-			DownloadFile();
-			 
 			this.callbackContext = callbackContext;
+			
+			cordova.getActivity().runOnUiThread(new Runnable() {
+			            	
+			   public void run() {     
+						 
+				   URL uri;
+				   try {
+						uri = new URL(url);
+						URLConnection conexion = uri.openConnection();
+						conexion.connect();
+			
+						int lenghtOfFile = conexion.getContentLength();	
+																
+						if(lenghtOfFile > 0){									
+							DownloadFile();	
+									
+						}
+					} catch (MalformedURLException e) {
+								// TODO Auto-generated catch block
+							e.printStackTrace();
+					} catch (IOException e) {
+								// TODO Auto-generated catch block
+							e.printStackTrace();
+					}catch (Exception e) {
+								// TODO: handle exception
+							callbackContext.sendPluginResult( new PluginResult(PluginResult.Status.ERROR, args.optString(0)));
+				                
+					}
+							
+							
+				}
+			});
+						
+			
 			
 			 
 		} 
@@ -149,7 +181,7 @@ public class DownloadDB extends CordovaPlugin {
                     callbackContext.sendPluginResult( new PluginResult(PluginResult.Status.OK, file.length()));
                 }
             });
-        }
+        } 
 		else {
 			return false;
 		}
