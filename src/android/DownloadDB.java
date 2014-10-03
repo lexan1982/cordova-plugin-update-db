@@ -107,6 +107,9 @@ public class DownloadDB extends CordovaPlugin {
 						if(lenghtOfFile > 0){									
 							DownloadFile();	
 									
+						}else{
+							callbackContext.sendPluginResult( new PluginResult(PluginResult.Status.ERROR, args.optString(0)));
+							
 						}
 					} catch (MalformedURLException e) {
 								// TODO Auto-generated catch block
