@@ -442,8 +442,9 @@ private DeviceDB GetDeviceDB(String dbName) {
 		
 		cordovaDBPath = dbPath + c.getString(0) + "/";
 		cordovaDBName = c.getString(1);
-		master_db.close();
 		c.close();
+		master_db.close();
+		
 		Log.d(TAG, ": " + cordovaDBPath + cordovaDBName);
 				
        
