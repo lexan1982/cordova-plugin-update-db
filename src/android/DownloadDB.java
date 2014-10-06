@@ -26,7 +26,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.zip.ZipEntry;
@@ -39,13 +39,17 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.R;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.widget.ImageView;
  
 /**  
  * This class exposes methods in Cordova that can be called from JavaScript.
@@ -92,13 +96,29 @@ public class DownloadDB extends CordovaPlugin {
 			
 			this.callbackContext = callbackContext;
 			
-			cordova.getActivity().runOnUiThread(new Runnable() {
+			
+			new Thread(){
+		        public void run(){
+		            try{
+		                URL uri = new URL(url);
+		                HttpURLConnection httpCon = (HttpURLConnection) uri.openConnection();
+		                if(httpCon.getResponseCode() != 200){
+		                    throw new 
+		                    Exception("Failed to connect");
+		                    }
+		                DownloadFile();	
+		            }catch(Exception e){
+		            	callbackContext.sendPluginResult( new PluginResult(PluginResult.Status.ERROR, args.optString(0)));
+		            }
+		        }
+		    }.start();
+			/*cordova.getActivity().runOnUiThread(new Runnable() {
 			            	
 			   public void run() {     
 						 
 				   URL uri;
 				   try {
-						uri = new URL(url);
+ 						uri = new URL(url);
 						URLConnection conexion = uri.openConnection();
 						conexion.connect();
 			
@@ -117,16 +137,12 @@ public class DownloadDB extends CordovaPlugin {
 					} catch (IOException e) {
 								// TODO Auto-generated catch block
 							e.printStackTrace();
-					}catch (Exception e) {
-								// TODO: handle exception
-							callbackContext.sendPluginResult( new PluginResult(PluginResult.Status.ERROR, args.optString(0)));
-				                
 					}
 							
 							
 				}
 			});
-						
+				*/		
 			
 			
 			 
@@ -440,6 +456,7 @@ private DeviceDB GetDeviceDB(String dbName) {
 		String cordovaDBName;		
 
 	}
+	
 	
 	
 }
