@@ -104,7 +104,7 @@ public class DownloadDB extends CordovaPlugin {
 			PluginResult pluginResult = new PluginResult(status);
 			pluginResult.setKeepCallback(true);
 			callbackContext.sendPluginResult(pluginResult);
-			 
+			   
 			new Thread(){
 		        public void run(){
 		            try{
@@ -115,7 +115,7 @@ public class DownloadDB extends CordovaPlugin {
 		                	//CallbackResult(false, "Zip don't exists");
 		                	PluginResult result = new PluginResult(PluginResult.Status.ERROR);
 		                    result.setKeepCallback(false);
-		                    callbackContext.sendPluginResult(result);
+		                    callbackContext.error("Zip don't exists");//.sendPluginResult(result);
 		                }
 		                else{
 		                	DownloadFile();
