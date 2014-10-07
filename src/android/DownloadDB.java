@@ -97,8 +97,122 @@ public class DownloadDB extends CordovaPlugin {
 			Log.d(TAG, ".. !!! DB path: " + zipPath);
 			
 			this.callbackContext = callbackContext;
+			isDownloaded = false;
 			
-			DownloadFile();
+			PluginResult.Status status = PluginResult.Status.NO_RESULT;
+
+			PluginResult pluginResult = new PluginResult(status);
+			pluginResult.setKeepCallback(true);
+			callbackContext.sendPluginResult(pluginResult);
+			 
+			new Thread(){
+		        public void run(){
+		            try{
+		                URL uri = new URL(url);
+		                HttpURLConnection httpCon = (HttpURLConnection) uri.openConnection();
+		                if(httpCon.getResponseCode() != 200){
+		                    //throw new Exception("Failed to connect");
+		                	//CallbackResult(false, "Zip don't exists");
+		                	PluginResult result = new PluginResult(PluginResult.Status.ERROR);
+		                    result.setKeepCallback(false);
+		                    callbackContext.sendPluginResult(result);
+		                }
+		                else{
+		                	DownloadFile();
+		                }	
+		            }catch(Exception e){
+		            	
+		            }
+		        }
+		    }.start();
+
+	/*		activity.runOnUiThread(new Runnable() {
+
+				@Override
+				public void run() {
+					URL uri;
+					try {
+						uri = new URL(url);
+					
+					URLConnection conexion = uri.openConnection();
+					conexion.connect();
+
+					int lenghtOfFile = conexion.getContentLength();
+
+					
+					
+					if(lenghtOfFile > 0){
+						String path = String.format("%s/%s.zip", zipPath, dbName);
+						ReplaceDB();
+						
+					mProgressDialog.setMax(lenghtOfFile / 1024);		
+						
+					
+					InputStream input = new BufferedInputStream(uri.openStream());
+
+					Log.d(TAG, "zip path:" + path);
+					File zip = new File(zipPath);
+					zip.mkdirs();
+					zip = new File(path);
+					zip.createNewFile();
+					FileOutputStream output = new FileOutputStream(path); // activity.openFileOutput(String.format("%s.zip",
+																			// dbName),
+																			// Context.MODE_PRIVATE);
+
+					Log.d(TAG, "zip path 2");
+
+					byte data[] = new byte[1024];
+
+					long total = 0;
+					int count;
+					while ((count = input.read(data)) != -1) {
+						total += count;					
+						//publishProgress("" + (int) (total / 1024));
+						output.write(data, 0, count);
+
+					}
+
+					output.flush();
+					output.close();
+					input.close();
+					isDownloaded = true;
+					UnzipUtility unzipper = new UnzipUtility();
+
+					if (isDownloaded){
+
+						try {
+
+							Log.d(TAG, "unzip");
+							String zipFile = String
+									.format("%s/%s.zip", zipPath, dbName);
+							
+							unzipper.unzip(zipFile, cordovaDBPath);
+
+							Log.d(TAG, "unzip 2");
+							
+							CallbackResult(true, "db imported");
+							
+							
+						} catch (Exception ex) {
+							// some errors occurred
+							ex.printStackTrace();
+							CallbackResult(false, ex.getMessage());
+						}
+					}else{
+						
+						CallbackResult(false, "Can not find a zip with DB");
+					}
+					}
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						Log.d(TAG, "..Download");
+						e.printStackTrace();
+						CallbackResult(false, "..Download fail");
+					}
+				}
+			});
+	*/		
+			//DownloadFile();
 			
 			/*result = new PluginResult(PluginResult.Status.NO_RESULT);
 			result.setKeepCallback(true);
@@ -217,7 +331,7 @@ public class DownloadDB extends CordovaPlugin {
 		else {
 			return false;
 		}
-		
+		Log.d(TAG, "..return from plugin");
 		return true;
 	}
 
@@ -268,8 +382,9 @@ private DeviceDB GetDeviceDB(String dbName) {
 	return dDB;
 	
 }
+boolean isDownloaded = false;
 	class DownloadFileAsync extends AsyncTask<String, String, String> {
-		boolean isDownloaded = false;
+		
 
 		@Override
 		protected void onPreExecute() {
