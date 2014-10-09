@@ -109,7 +109,13 @@ public class DownloadDB extends CordovaPlugin {
 	            httpConnection.setRequestMethod("GET");  
 	            httpConnection.connect();  
 	            if(httpConnection.getResponseCode() != 200){
+	            	Log.d(TAG, "..callbackContext.error ");
 	            	callbackContext.error("Zip don't exists");
+	            	((CordovaActivity)this.cordova.getActivity()).sendJavascript("UART.system.Helper.downloadDB('error')");
+	            	Log.d(TAG, "..callbackContext.error ");
+	            	callbackContext.error("Zip don't exists");
+	            	((CordovaActivity)this.cordova.getActivity()).sendJavascript("UART.system.Helper.downloadDB('error')");
+	            	
 	            }else{
 	            	DownloadFile();
 	            	
