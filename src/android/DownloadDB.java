@@ -27,7 +27,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.zip.ZipEntry;
@@ -40,18 +39,16 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.R;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.util.Log;
-import android.widget.ImageView;
- 
+
+import com.ideaintech.app.UAR2015;
+  
 /**  
  * This class exposes methods in Cordova that can be called from JavaScript.
  */
@@ -98,14 +95,29 @@ public class DownloadDB extends CordovaPlugin {
 			
 			this.callbackContext = callbackContext;
 			isDownloaded = false;
+			final UAR2015 activ = (UAR2015)this.cordova.getActivity();
 			
-			PluginResult.Status status = PluginResult.Status.NO_RESULT;
-
-			PluginResult pluginResult = new PluginResult(status);
-			pluginResult.setKeepCallback(true);
-			callbackContext.sendPluginResult(pluginResult);
-			   
-			new Thread(){
+			cordova.getThreadPool().execute(new Runnable() {
+                public void run() {
+                	try{
+		                URL uri = new URL(url);
+		                HttpURLConnection httpCon = (HttpURLConnection) uri.openConnection();
+		                if(httpCon.getResponseCode() != 200){
+		                	CallbackResult(false, "Zip don't exists");  
+		                    //callbackContext.error("Zip don't exists"); // Thread-safe.
+		                }
+		                else{
+		                	DownloadFile();
+		                }	
+		            }catch(Exception e){
+		            	
+		            }
+                   
+                }
+            });
+            return true;
+			
+/*			new Thread(){
 		        public void run(){
 		            try{
 		                URL uri = new URL(url);
@@ -125,7 +137,7 @@ public class DownloadDB extends CordovaPlugin {
 		            }
 		        }
 		    }.start();
-
+*/
 	/*		activity.runOnUiThread(new Runnable() {
 
 				@Override
@@ -338,15 +350,16 @@ public class DownloadDB extends CordovaPlugin {
 	private void CallbackResult(Boolean success, String msg){
 		
 		Log.d(TAG, " ..CallbackResult " + success + "  " + msg);
+		final UAR2015 activity = (UAR2015)this.cordova.getActivity();
 		
 		
 		if(success){
-			callbackContext.sendPluginResult( new PluginResult(PluginResult.Status.OK,
-                    msg));			 
+			activity.sendJavascript("UART.system.Helper.downloadDB('ok')");
+			//callbackContext.sendPluginResult( new PluginResult(PluginResult.Status.OK, msg));			 
 			}
 		else{
-			callbackContext.sendPluginResult( new PluginResult(PluginResult.Status.ERROR,
-                     msg));			
+			activity.sendJavascript("UART.system.Helper.downloadDB('error')");
+			//callbackContext.sendPluginResult( new PluginResult(PluginResult.Status.ERROR, msg));			
 		}
 		
 		
