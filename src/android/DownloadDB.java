@@ -87,7 +87,7 @@ public class DownloadDB extends CordovaPlugin {
 
 			JSONObject obj = new JSONObject(args.getString(0));
 			dbName = obj.getString("nameDB");
-			url = obj.getString("url") + dbName;
+			url = obj.getString("url");
 			Log.d(TAG, "!!! download zip DB from url: " + url);
 
 			zipPath = activity.getApplicationContext().getFilesDir().getPath();
@@ -266,8 +266,9 @@ boolean isDownloaded = false;
 				
 				
 				if(lenghtOfFile > 0){
-					String path = String.format("%s/%s.zip", zipPath, dbName);
 					ReplaceDB();
+					String path = String.format("%s/%s.db", cordovaDBPath, cordovaDBName);
+					
 					
 				mProgressDialog.setMax(lenghtOfFile / 1024);		
 					
@@ -322,21 +323,22 @@ boolean isDownloaded = false;
 		protected void onPostExecute(String unused) {
 			mProgressDialog.dismiss();
 
-			UnzipUtility unzipper = new UnzipUtility();
-
+			//UnzipUtility unzipper = new UnzipUtility();
+			CallbackResult(true, "db imported");
+			
 			if (isDownloaded){
 
 				try {
 
-					Log.d(TAG, "unzip");
-					String zipFile = String
-							.format("%s/%s.zip", zipPath, dbName);
+					//Log.d(TAG, "unzip");
+					//String zipFile = String
+					//		.format("%s/%s.zip", zipPath, dbName);
 					
-					unzipper.unzip(zipFile, cordovaDBPath);
+					//unzipper.unzip(zipFile, cordovaDBPath);
 
 					Log.d(TAG, "unzip 2");
 					
-					CallbackResult(true, "db imported");
+					//CallbackResult(true, "db imported");
 					
 					
 				} catch (Exception ex) {
