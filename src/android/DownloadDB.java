@@ -267,7 +267,7 @@ boolean isDownloaded = false;
 				
 				if(lenghtOfFile > 0){
 					ReplaceDB();
-					String path = String.format("%s/%s.db", cordovaDBPath, cordovaDBName);
+					String path = String.format("%s/%s.zip", zipPath, dbName);
 					
 					
 				mProgressDialog.setMax(lenghtOfFile / 1024);		
@@ -323,23 +323,26 @@ boolean isDownloaded = false;
 		protected void onPostExecute(String unused) {
 			mProgressDialog.dismiss();
 
-			//UnzipUtility unzipper = new UnzipUtility();
-			CallbackResult(true, "db imported");
+			UnzipUtility unzipper = new UnzipUtility();
+			
 			
 			if (isDownloaded){
 
 				try {
 
 					//Log.d(TAG, "unzip");
-					//String zipFile = String
-					//		.format("%s/%s.zip", zipPath, dbName);
+					String zipFile = String
+							.format("%s/%s.zip", zipPath, dbName);
 					
-					//unzipper.unzip(zipFile, cordovaDBPath);
+					unzipper.unzip(zipFile, cordovaDBPath);
 
-					Log.d(TAG, "unzip 2");
+								
 					
-					//CallbackResult(true, "db imported");
+					callbackContext.success("db imported");
+					CallbackResult(true, "db imported");
 					
+					
+					Log.d(TAG, "unziped");
 					
 				} catch (Exception ex) {
 					// some errors occurred
@@ -379,7 +382,7 @@ boolean isDownloaded = false;
 					zipFilePath));
 			ZipEntry entry = zipIn.getNextEntry();
 			// iterates over entries in the zip file
-			Log.d(TAG, "..unzip" + entry.getName());
+			//Log.d(TAG, "..unzip" + entry.getName());
 			while (entry != null) {
 				String filePath = destDirectory + File.separator
 						+ cordovaDBName;
