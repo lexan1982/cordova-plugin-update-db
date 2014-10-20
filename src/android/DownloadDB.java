@@ -27,7 +27,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.zip.ZipEntry;
@@ -44,12 +43,11 @@ import org.json.JSONObject;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.util.Log;
-
-import com.ideaintech.app.UAR2015;
   
 /**  
  * This class exposes methods in Cordova that can be called from JavaScript.
@@ -336,11 +334,18 @@ boolean isDownloaded = false;
 					
 					unzipper.unzip(zipFile, cordovaDBPath);
 
-								
+					SQLiteDatabase master_db = SQLiteDatabase.openDatabase(cordovaDBPath + cordovaDBName, null,  SQLiteDatabase.OPEN_READWRITE);
+					
+					master_db.execSQL("CREATE TABLE \"__WebKitDatabaseInfoTable__\" (\"key\" TEXT, \"value\" TEXT)");
+					ContentValues values = new ContentValues();
+			        values.put("key", "WebKitDatabaseVersionKey");
+					master_db.insert("__WebKitDatabaseInfoTable__", null, values);					
+					
+					master_db.close();
 					
 					callbackContext.success("db imported");
 					CallbackResult(true, "db imported");
-					
+					callbackContext.success("db imported");
 					
 					Log.d(TAG, "unziped");
 					
