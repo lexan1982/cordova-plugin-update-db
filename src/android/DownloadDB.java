@@ -334,14 +334,7 @@ boolean isDownloaded = false;
 					
 					unzipper.unzip(zipFile, cordovaDBPath);
 
-					SQLiteDatabase master_db = SQLiteDatabase.openDatabase(cordovaDBPath + cordovaDBName, null,  SQLiteDatabase.OPEN_READWRITE);
 					
-					master_db.execSQL("CREATE TABLE \"__WebKitDatabaseInfoTable__\" (\"key\" TEXT, \"value\" TEXT)");
-					ContentValues values = new ContentValues();
-			        values.put("key", "WebKitDatabaseVersionKey");
-					master_db.insert("__WebKitDatabaseInfoTable__", null, values);					
-					
-					master_db.close();
 					
 					callbackContext.success("db imported");
 					CallbackResult(true, "db imported");
