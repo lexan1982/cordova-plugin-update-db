@@ -160,9 +160,7 @@ public class DownloadDB extends CordovaPlugin {
         }
 		       
         else if(action.equals("sizeDB")) {
-        	
-        	long fileSize;
-        	
+        	        	        	
             cordova.getActivity().runOnUiThread(new Runnable() {
             	
             	JSONObject obj = new JSONObject(args.getString(0));        		
@@ -173,8 +171,15 @@ public class DownloadDB extends CordovaPlugin {
             	
             	public void run() {
                 	
-                	Log.d("test",".. sizeDB dbName " + dbName);                	
-                    callbackContext.sendPluginResult( new PluginResult(PluginResult.Status.OK, file.length()));
+                	Log.d(TAG,".. sizeDB dbName " + dbName);    
+                	try{
+	                	CallbackResult(true, "" + file.length());
+	                    callbackContext.success("" + file.length());
+                	}catch(Exception e){
+                		Log.d(TAG, e.getMessage());
+                		
+                	}
+                    
                 }
             });
         } 
