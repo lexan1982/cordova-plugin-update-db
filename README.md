@@ -16,7 +16,7 @@ Cordova Plugin - download zip with DB and replace it on sdcard
  
  {
     nameDB: 'databaseName', 
-    url: 'http://domain.com/data/' 
+    url: 'http://domain.com/data?username=demouser&pass=demopass&event=6440&appver=1&zip=1' 
  }
 </pre>
   
