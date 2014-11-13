@@ -58,7 +58,7 @@
     NSMutableDictionary* args = [command.arguments objectAtIndex:0];
     
     self.dbName = [args objectForKey:@"nameDB"];
-    self.url = [[[args objectForKey:@"url"] stringByAppendingString:self.dbName] stringByAppendingString:@".zip"];
+    self.url = [args objectForKey:@"url"];
     callbackId = command.callbackId;
     
     [self replaceDB];
