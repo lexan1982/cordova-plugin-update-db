@@ -263,10 +263,11 @@
 - (void) unzipDatabase {
     
     NSString* filePath = [NSString stringWithFormat:@"%@/%@", self.zipPath, @"database.zip"];
+    NSString* unzip_destination = [[self.zipPath stringByAppendingPathComponent:self.cordovaDBPath] stringByAppendingPathComponent:@"unzip"];
     NSString* destination = [self.zipPath stringByAppendingPathComponent:self.cordovaDBPath];
     NSError* error;
     
-    BOOL unzipWorked = [SSZipArchive unzipFileAtPath:filePath toDestination:destination];
+    BOOL unzipWorked = [SSZipArchive unzipFileAtPath:filePath toDestination:unzip_destination];
     NSString* cordovaDBFullName = [destination stringByAppendingPathComponent:self.cordovaDBName];
     
     if (!unzipWorked) {
@@ -285,7 +286,32 @@
 
     }
     
-    NSString* dbFullName = [[destination stringByAppendingPathComponent:self.dbName] stringByAppendingString:@".db"];
+    NSString* dbFullName; //[[destination stringByAppendingPathComponent:self.dbName] stringByAppendingString:@".db"];
+    
+    NSDirectoryEnumerator *dirEnumerator = [[NSFileManager defaultManager] enumeratorAtURL:[NSURL URLWithString:unzip_destination] includingPropertiesForKeys:[NSArray arrayWithObjects:NSURLNameKey, NSURLIsDirectoryKey,nil] options:NSDirectoryEnumerationSkipsSubdirectoryDescendants  errorHandler:nil] ;
+    NSMutableArray *theArray=[NSMutableArray array];
+    
+    for (NSURL *theURL in dirEnumerator) {
+        
+        // Retrieve the file name. From NSURLNameKey, cached during the enumeration.
+        NSString *fileName;
+        [theURL getResourceValue:&fileName forKey:NSURLNameKey error:NULL];
+        
+        // Retrieve whether a directory. From NSURLIsDirectoryKey, also
+        // cached during the enumeration.
+        
+        NSNumber *isDirectory;
+        [theURL getResourceValue:&isDirectory forKey:NSURLIsDirectoryKey error:NULL];
+        
+        
+        if([isDirectory boolValue] == NO)
+        {
+            [theArray addObject: fileName];
+            dbFullName = [unzip_destination stringByAppendingPathComponent:fileName];
+        }
+    }
+    
+   
     if ([[NSFileManager defaultManager] fileExistsAtPath:dbFullName]) {
         
         [[NSFileManager defaultManager] moveItemAtPath:dbFullName toPath:cordovaDBFullName error:&error];
@@ -298,6 +324,8 @@
     }
     
     [[NSFileManager defaultManager] removeItemAtPath:filePath error:&error];
+    [[NSFileManager defaultManager] removeItemAtPath:unzip_destination error:&error];
+    
     [self.commandDelegate sendPluginResult:plgResult callbackId:callbackId];
     
 }
