@@ -264,6 +264,8 @@
     
     NSString* filePath = [NSString stringWithFormat:@"%@/%@", self.zipPath, @"database.zip"];
     NSString* unzip_destination = [[self.zipPath stringByAppendingPathComponent:self.cordovaDBPath] stringByAppendingPathComponent:@"unzip"];
+    
+    [[NSFileManager defaultManager] removeItemAtPath:unzip_destination error:nil];
     NSString* destination = [self.zipPath stringByAppendingPathComponent:self.cordovaDBPath];
     NSError* error;
     
@@ -288,7 +290,8 @@
     
     NSString* dbFullName; //[[destination stringByAppendingPathComponent:self.dbName] stringByAppendingString:@".db"];
     
-    NSDirectoryEnumerator *dirEnumerator = [[NSFileManager defaultManager] enumeratorAtURL:[NSURL URLWithString:unzip_destination] includingPropertiesForKeys:[NSArray arrayWithObjects:NSURLNameKey, NSURLIsDirectoryKey,nil] options:NSDirectoryEnumerationSkipsSubdirectoryDescendants  errorHandler:nil] ;
+    NSURL* dirUrl = [NSURL fileURLWithPath:unzip_destination];
+    NSDirectoryEnumerator *dirEnumerator = [[NSFileManager defaultManager] enumeratorAtURL:dirUrl includingPropertiesForKeys:[NSArray arrayWithObjects:NSURLNameKey, NSURLIsDirectoryKey,nil] options:NSDirectoryEnumerationSkipsSubdirectoryDescendants  errorHandler:nil] ;
     NSMutableArray *theArray=[NSMutableArray array];
     
     for (NSURL *theURL in dirEnumerator) {
