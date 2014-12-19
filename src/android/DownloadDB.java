@@ -176,7 +176,7 @@ public class DownloadDB extends CordovaPlugin {
 	                	CallbackResult(true, "" + file.length());
 	                    callbackContext.success("" + file.length());
                 	}catch(Exception e){
-                		Log.d(TAG, e.getMessage());
+                	//	Log.d(TAG, e.getMessage());
                 		
                 	}
                     
