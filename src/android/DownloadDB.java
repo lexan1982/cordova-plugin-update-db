@@ -6,9 +6,7 @@ regarding copyright ownership.  The ASF licenses this file
 to you under the Apache License, Version 2.0 (the
 "License"); you may not use this file except in compliance
 with the License.  You may obtain a copy of the License at
-
   http://www.apache.org/licenses/LICENSE-2.0
-
 Unless required by applicable law or agreed to in writing,
 software distributed under the License is distributed on an
 "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -222,18 +220,38 @@ public class DownloadDB extends CordovaPlugin {
 private DeviceDB GetDeviceDB(String dbName) {
 	DeviceDB dDB = new DeviceDB();
 	
-	String dbPath = cordova.getActivity().getApplicationContext().getFilesDir().getPath();
-	   dbPath = dbPath.substring(0, dbPath.lastIndexOf("/")) + "/app_database/";
+	String path = cordova.getActivity().getApplicationContext().getFilesDir().getPath();
+	String dbPath = path.substring(0, path.lastIndexOf("/")) + "/app_database/";
+	   
+	   Log.d(TAG, dbPath);
+	   
+	   File file = new File(dbPath + "Databases.db");
+		if(!file.exists()){ 
+			Log.d(TAG, "Databases.db not found");
+			dbPath = path.substring(0, path.lastIndexOf("/")) + "/app_webview/databases/";
+		} 
+	   
 	
 	   dDB.master_db = SQLiteDatabase.openDatabase(dbPath + "Databases.db", null,  SQLiteDatabase.OPEN_READWRITE);
 	
-	Cursor c = dDB.master_db.rawQuery("SELECT origin, path FROM Databases WHERE name='"+dbName+"'", null);
-	c.moveToFirst();
-	
-	dDB.cordovaDBPath = dbPath + c.getString(0) + "/";
-	dDB.cordovaDBName = c.getString(1);
-	c.close();
-	
+	try{
+		Cursor c = dDB.master_db.rawQuery("SELECT origin, path FROM Databases WHERE name='"+dbName+"'", null);
+		c.moveToFirst();
+		
+		dDB.cordovaDBPath = dbPath + c.getString(0) + "/";
+		dDB.cordovaDBName = c.getString(1);
+		c.close();
+	}catch(Exception e){
+		Log.d(TAG, "Can not found fields   ORIGIN, PATH");
+		
+		Cursor c = dDB.master_db.rawQuery("SELECT origin, id FROM Databases WHERE name='"+dbName+"'", null);
+		c.moveToFirst();
+		
+		dDB.cordovaDBPath = dbPath + c.getString(0) + "/";
+		dDB.cordovaDBName = c.getString(1) + ".db";
+		c.close();
+		
+	}
 	return dDB;
 	
 }
@@ -434,22 +452,47 @@ boolean isDownloaded = false;
 		
 	private void ReplaceDB() {
 		
-		Log.d(TAG, "..Get physical DB name and path");
+		Log.d(TAG, "..Get physical DB name and path. zipPath " + zipPath);
 		
 		String dbPath = zipPath.substring(0, zipPath.lastIndexOf("/")) + "/app_database/";
-		SQLiteDatabase master_db = SQLiteDatabase.openDatabase(dbPath + "Databases.db", null,  SQLiteDatabase.OPEN_READONLY);
+		SQLiteDatabase master_db = null;
+		String field = "path";
 		
-		Cursor c = master_db.rawQuery("SELECT origin, path FROM Databases WHERE name='"+dbName+"'", null);
+		Log.d(TAG, dbPath + "Databases.db");
+		File file = new File(dbPath + "Databases.db");
+		
+		if(!file.exists()){
+			
+			Log.d(TAG, "Databases.db not found");
+			field = "id";
+			dbPath = zipPath.substring(0, zipPath.lastIndexOf("/")) + "/app_webview/databases/";
+		} 
+		
+		
+		try{
+			master_db = SQLiteDatabase.openDatabase(dbPath + "Databases.db", null,  SQLiteDatabase.OPEN_READONLY);
+		}catch(Exception e){
+			
+			
+		}
+		
+		if(master_db != null){
+		Cursor c = master_db.rawQuery("SELECT origin, "+field+" FROM Databases WHERE name='"+dbName+"'", null);
 		c.moveToFirst();
 		
 		cordovaDBPath = dbPath + c.getString(0) + "/";
 		cordovaDBName = c.getString(1);
+		
+		if(field == "id"){
+			field += ".db";
+		}
+		
 		c.close();
 		master_db.close();
 		
 		Log.d(TAG, ": " + cordovaDBPath + cordovaDBName);
 				
-       
+		}
 	}
 
 	class DeviceDB{
@@ -497,22 +540,6 @@ boolean isDownloaded = false;
 	  }
 	
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
