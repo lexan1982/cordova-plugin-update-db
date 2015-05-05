@@ -248,7 +248,7 @@ private DeviceDB GetDeviceDB(String dbName) {
 		c.moveToFirst();
 		
 		dDB.cordovaDBPath = dbPath + c.getString(0) + "/";
-		dDB.cordovaDBName = c.getString(1) + ".db";
+		dDB.cordovaDBName = c.getString(1);
 		c.close();
 		
 	}
