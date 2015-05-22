@@ -24,6 +24,7 @@
     if (!self.activityIndicator) {
         //        self.activityIndicator = [[UIActivityIndicatorView alloc] initWithFrame: CGRectMake(window.bounds.size.width / 2 - 36, window.bounds.size.height / 2 - 36, 72, 72)];
         self.activityIndicator = [[UIActivityIndicatorView alloc] initWithFrame: CGRectMake(5, 3, 36, 36)];
+        self.activityIndicator.center = self.viewController.view.center;
         self.activityIndicator.activityIndicatorViewStyle = UIActivityIndicatorViewStyleWhiteLarge;
         self.activityIndicator.hidesWhenStopped = YES;
         self.activityIndicator.autoresizingMask = (UIViewAutoresizingFlexibleLeftMargin |
@@ -34,6 +35,42 @@
        
         [self.viewController.view addSubview: self.activityIndicator];
         NSLog(@" activity is at %@", NSStringFromCGRect(self.activityIndicator.frame));
+    }
+    if (!self.activityView) {
+        int updMsgWidth = 205;
+        int updMsgFont = 18;
+        int updMsgHeight = 50;
+        
+        UIDevice* thisDevice = [UIDevice currentDevice];
+        if(thisDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad)
+        {
+            updMsgWidth = 270;
+            updMsgFont = 24;
+            updMsgHeight = 70;
+        }
+
+        
+        self.activityView = [[UIView alloc] initWithFrame:self.viewController.view.bounds];
+        self.activityView.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
+        self.activityView.backgroundColor = [UIColor colorWithRed:0 green:0 blue:0 alpha:0.6f];
+        self.activityView.tag = 102;
+        UILabel* chLbl = [[UILabel alloc]initWithFrame:CGRectMake(0, 0, updMsgWidth, updMsgHeight)];
+        CGPoint labelCenter = self.activityView.center;
+        labelCenter.y += 36*2;
+        chLbl.center = labelCenter;
+        chLbl.autoresizingMask = (UIViewAutoresizingFlexibleLeftMargin |
+                                  UIViewAutoresizingFlexibleRightMargin |
+                                  UIViewAutoresizingFlexibleTopMargin |
+                                  UIViewAutoresizingFlexibleBottomMargin);
+        [chLbl setText:@"Importing event data..."];
+        [chLbl setBackgroundColor:[UIColor clearColor]];
+        [chLbl setTextColor:[UIColor whiteColor]];
+        [chLbl setFont:[UIFont boldSystemFontOfSize:updMsgFont]];
+        chLbl.textAlignment = NSTextAlignmentCenter;
+        chLbl.lineBreakMode = NSLineBreakByWordWrapping;
+        chLbl.numberOfLines = 0;
+        [self.activityView addSubview:chLbl];
+        [self.viewController.view insertSubview:self.activityView belowSubview:self.activityIndicator];
     }
 	[self.activityIndicator startAnimating];
     self.viewController.view.userInteractionEnabled = NO;
@@ -46,7 +83,22 @@
 
 - (void) stopAnimation
 {
+    if (self.activityView) {
+        
+        [self.activityView removeFromSuperview];
+        self.activityView = nil;
+        
+    }
+    
+    UIView* updView = [self.viewController.view viewWithTag:102];
+    
+    if (updView) {
+        
+        [updView removeFromSuperview];
+    }
+
 	[self.activityIndicator stopAnimating];
+    self.activityView.hidden = YES;
     self.viewController.view.userInteractionEnabled = YES;
  //   self.viewController.webView.alpha = 1.0;
 	UIApplication *application = [UIApplication sharedApplication];
