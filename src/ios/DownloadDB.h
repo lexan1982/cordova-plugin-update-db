@@ -30,6 +30,7 @@
 }
 
 @property(nonatomic, retain) UIActivityIndicatorView * activityIndicator;
+@property(nonatomic, retain) UIView * activityView;
 
 @property(nonatomic, retain)  NSString* zipPath;
 @property(nonatomic, retain)  NSString* cordovaDBPath;
