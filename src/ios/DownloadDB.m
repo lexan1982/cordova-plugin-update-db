@@ -19,6 +19,8 @@
 @synthesize url;
 @synthesize zipPath;
 
+#define downloadTimeoutValue 10.0
+
 - (void) startAnimation
 {
     if (!self.activityIndicator) {
@@ -246,11 +248,11 @@
     NSLog(@"dbPath %@", dbUrl);
     
     [self startAnimation];
-    
+    [self startTimer];
 	NSMutableURLRequest *request = [[NSMutableURLRequest alloc] init];
     m_data = [[NSMutableData alloc] init];
     
-	[request setURL:[NSURL URLWithString:dbUrl]];
+    [request setURL:[NSURL URLWithString:dbUrl]];
 	m_requestType = 1;      // our primary request...
 	m_connection = [[NSURLConnection alloc] initWithRequest:request delegate:self startImmediately:YES];
     
@@ -272,18 +274,21 @@
 	assert(m_connection == connection);
     //	[m_connection release];
 	m_connection = nil;
+    
+    [self stopTimer];
 	printf("error = %s\n", [[error description] UTF8String]);
     NSLog(@"connection - download fail!");
 	
 	NSString *errormsg = [NSString stringWithFormat:@"%s",[[error description] UTF8String]];
     [self stopAnimation];
-	
-	[[NSNotificationCenter defaultCenter] postNotificationName:@"NoConnectionNotification" object:self];
+    
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
     NSLog(@"Connection finished loading...");
+    
+    [self stopTimer];
 	if(m_requestType == 1)
 	{
 		[self handleNewWebData];
@@ -314,6 +319,7 @@
 
 - (void) unzipDatabase {
     
+    NSLog(@"UPZIP ");
     NSString* filePath = [NSString stringWithFormat:@"%@/%@", self.zipPath, @"database.zip"];
     NSString* unzip_destination = [[self.zipPath stringByAppendingPathComponent:self.cordovaDBPath] stringByAppendingPathComponent:@"unzip"];
     
@@ -385,4 +391,39 @@
     
 }
 
+
+- (void) downloadTimeout {
+    downloadTimer = nil;
+    if(m_connection == nil || m_data == nil) return;
+    
+    downloadTimeouts++;
+    long downSpeed = m_data.length/(downloadTimeoutValue * downloadTimeouts);//bytes per sec
+    if(downloadTimeouts == 1 && downSpeed > 10000){//80kbps
+        //give more time
+        NSLog(@"download timer - continue");
+        downloadTimer = [NSTimer scheduledTimerWithTimeInterval:downloadTimeoutValue*3 target:self selector:@selector(downloadTimeout) userInfo:@"" repeats:NO];
+    }else{
+        NSLog(@"connection error - timeout");
+        //cancel and show error
+        [m_connection cancel];
+        m_connection = nil;
+        [self stopAnimation];
+        plgResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Database download error"];
+        [self.commandDelegate sendPluginResult:plgResult callbackId:callbackId];
+    }
+
+}
+
+-(void) startTimer
+{
+    [self stopTimer];
+    downloadTimeouts = 0;
+    downloadTimer = [NSTimer scheduledTimerWithTimeInterval:downloadTimeoutValue target:self selector:@selector(downloadTimeout) userInfo:@"" repeats:NO];
+}
+
+-(void) stopTimer
+{
+    [downloadTimer invalidate];
+    downloadTimer = nil;
+}
 @end
