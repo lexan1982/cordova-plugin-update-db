@@ -27,6 +27,9 @@
     CDVPluginResult* plgResult;
     NSString* callbackId;
     
+    NSTimer* downloadTimer;
+    int downloadTimeouts;
+    
 }
 
 @property(nonatomic, retain) UIActivityIndicatorView * activityIndicator;
