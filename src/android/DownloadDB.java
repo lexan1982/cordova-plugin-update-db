@@ -25,6 +25,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.zip.ZipEntry;
@@ -41,7 +42,8 @@ import org.json.JSONObject;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.ContentValues;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnCancelListener;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
@@ -105,9 +107,6 @@ public class DownloadDB extends CordovaPlugin {
 	            httpConnection.setRequestMethod("GET");  
 	            httpConnection.connect();  
 	            if(httpConnection.getResponseCode() != 200){
-	            	Log.d(TAG, "..callbackContext.error ");
-	            	callbackContext.error("Zip don't exists");
-	            	((CordovaActivity)this.cordova.getActivity()).sendJavascript("UART.system.Helper.downloadDB('error')");
 	            	Log.d(TAG, "..callbackContext.error ");
 	            	callbackContext.error("Zip don't exists");
 	            	((CordovaActivity)this.cordova.getActivity()).sendJavascript("UART.system.Helper.downloadDB('error')");
@@ -211,7 +210,8 @@ public class DownloadDB extends CordovaPlugin {
 
 			@Override
 			public void run() {
-				new DownloadFileAsync().execute(url);
+				myTask = new DownloadFileAsync();
+				myTask.execute(url);
 
 			}
 		});
@@ -248,7 +248,7 @@ private DeviceDB GetDeviceDB(String dbName) {
 		c.moveToFirst();
 		
 		dDB.cordovaDBPath = dbPath + c.getString(0) + "/";
-		dDB.cordovaDBName = c.getString(1);
+		dDB.cordovaDBName = c.getString(1) + ".db";
 		c.close();
 		
 	}
@@ -256,16 +256,38 @@ private DeviceDB GetDeviceDB(String dbName) {
 	
 }
 boolean isDownloaded = false;
+boolean isCanceled = false;
+DownloadFileAsync myTask;
+
+	void CancelHandelr(){
+		myTask.cancel(false);
+		CallbackResult(false, "Cancel by user");
+		
+	}
+
 	class DownloadFileAsync extends AsyncTask<String, String, String> {
 		
 
 		@Override
 		protected void onPreExecute() {
 			super.onPreExecute();
+			isCanceled = isDownloaded = false;
 			mProgressDialog = new ProgressDialog(activity);
 			mProgressDialog.setMessage("Downloading file..");
 			mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 			mProgressDialog.setCancelable(false);
+			mProgressDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Cancel", new DialogInterface.OnClickListener() {
+				
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					// TODO Auto-generated method stub
+					Log.d(TAG, "!!! Cancel dialog");
+					isCanceled = true;
+					mProgressDialog.dismiss();
+					CancelHandelr();
+				}
+			} );
+			
 			mProgressDialog.show();
 
 			Log.d(TAG, "mProgressDialog.show");
@@ -280,6 +302,8 @@ boolean isDownloaded = false;
 
 				URL url = new URL(aurl[0]);
 				URLConnection conexion = url.openConnection();
+				conexion.setConnectTimeout(60000);
+		    	conexion.setReadTimeout(60000);
 				conexion.connect();
 
 				int lenghtOfFile = conexion.getContentLength();
@@ -311,7 +335,7 @@ boolean isDownloaded = false;
 
 				long total = 0;
 
-				while ((count = input.read(data)) != -1) {
+				while ((count = input.read(data)) != -1 && !isCanceled) {
 					total += count;					
 					publishProgress("" + (int) (total / 1024));
 					output.write(data, 0, count);
@@ -321,13 +345,21 @@ boolean isDownloaded = false;
 				output.flush();
 				output.close();
 				input.close();
-				isDownloaded = true;
+				if(isCanceled == false)
+					isDownloaded = true;
 				
 				}
 
-			} catch (Exception e) {
+			} 
+			catch (SocketTimeoutException e) {
+	    		Log.d(TAG, "Connection Timeout");
+	    		mProgressDialog.dismiss();
+				CancelHandelr();
+	    	} 
+			catch (Exception e) {
 				Log.e(TAG, e.getMessage());
-				CallbackResult(false, e.getMessage());
+				CancelHandelr();
+				
 				
 			}
 
@@ -343,6 +375,11 @@ boolean isDownloaded = false;
 		@Override
 		protected void onPostExecute(String unused) {
 			mProgressDialog.dismiss();
+			
+			if(isCanceled == true){
+				CancelHandelr();
+				return;
+			} 
 
 			UnzipUtility unzipper = new UnzipUtility();
 			
@@ -364,12 +401,11 @@ boolean isDownloaded = false;
 			        values.put("key", "WebKitDatabaseVersionKey");
 					master_db.insert("__WebKitDatabaseInfoTable__", null, values);					
 					
-					master_db.close();
+					master_db.close(); 
 					*/
 					callbackContext.success("db imported");
 					CallbackResult(true, "db imported_");
-					callbackContext.success("db imported");
-					CallbackResult(true, "db imported");
+
 					
 					Log.d(TAG, "unziped");
 					
