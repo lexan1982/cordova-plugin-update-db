@@ -104,10 +104,12 @@ public class DownloadDB extends CordovaPlugin {
 	            HttpURLConnection httpConnection = (HttpURLConnection) uri.openConnection();  
 	            httpConnection.setDoInput(true);  
 	            httpConnection.setDoOutput(true);  
+	            httpConnection.setConnectTimeout(60000);
+	            httpConnection.setReadTimeout(60000);
 	            httpConnection.setRequestMethod("GET");  
 	            httpConnection.connect();  
 	            if(httpConnection.getResponseCode() != 200){
-	            	Log.d(TAG, "..callbackContext.error ");
+	            	Log.d(TAG, "..callbackContext.error");
 	            	callbackContext.error("Zip don't exists");
 	            	((CordovaActivity)this.cordova.getActivity()).sendJavascript("UART.system.Helper.downloadDB('error')");
 	            	
@@ -115,7 +117,14 @@ public class DownloadDB extends CordovaPlugin {
 	            	DownloadFile();
 	            	
 	            }
-			} catch (Exception e) {
+			} 
+			catch (SocketTimeoutException e) {
+				Log.d(TAG, "..callbackContext.error");
+            	callbackContext.error("Zip don't exists");
+            	((CordovaActivity)this.cordova.getActivity()).sendJavascript("UART.system.Helper.downloadDB('error')");
+            	
+	    	} 
+			catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}  
@@ -230,7 +239,8 @@ private DeviceDB GetDeviceDB(String dbName) {
 			Log.d(TAG, "Databases.db not found");
 			dbPath = path.substring(0, path.lastIndexOf("/")) + "/app_webview/databases/";
 		} 
-	   
+		
+			   
 	
 	   dDB.master_db = SQLiteDatabase.openDatabase(dbPath + "Databases.db", null,  SQLiteDatabase.OPEN_READWRITE);
 	
@@ -248,7 +258,7 @@ private DeviceDB GetDeviceDB(String dbName) {
 		c.moveToFirst();
 		
 		dDB.cordovaDBPath = dbPath + c.getString(0) + "/";
-		dDB.cordovaDBName = c.getString(1) + ".db";
+		dDB.cordovaDBName = c.getString(1);
 		c.close();
 		
 	}
