@@ -546,8 +546,8 @@ DownloadFileAsync myTask;
 		SQLiteDatabase master_db;
 		String cordovaDBPath;
 		String cordovaDBName;		
-
-	}
+ 
+	} 
 	
 	class CheckZip extends AsyncTask<Void, Void, Void> {
 
